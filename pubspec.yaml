@@ -51,6 +51,11 @@ dev_dependencies:
   drift_dev: ^2.35.1
   build_runner: ^2.16.2
 
+# path_provider_android >= 2.3.0 uses JNI; libdartjni.so fails to load on the
+# target device. 2.2.23 is the last version without JNI.
+dependency_overrides:
+  path_provider_android: 2.2.23
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
