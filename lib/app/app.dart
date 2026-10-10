@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../features/exercises/presentation/exercise_list_screen.dart';
+import 'app_shell.dart';
 
 class PrforgeApp extends StatelessWidget {
   const PrforgeApp({super.key});
@@ -17,7 +17,7 @@ class PrforgeApp extends StatelessWidget {
         brightness: Brightness.dark,
         useMaterial3: true,
       ),
-      home: const ExerciseListScreen(),
+      home: const AppShell(),
     );
   }
 }
