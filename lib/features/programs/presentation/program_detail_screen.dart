@@ -5,6 +5,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/widgets/name_dialog.dart';
 import '../data/workout_day_repository.dart';
 import 'program_providers.dart';
+import 'workout_day_screen.dart';
 
 class ProgramDetailScreen extends ConsumerWidget {
   const ProgramDetailScreen({super.key, required this.programId});
@@ -106,6 +107,9 @@ class ProgramDetailScreen extends ConsumerWidget {
               return ListTile(
                 key: ValueKey(day.id),
                 title: Text(day.name),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                  builder: (_) => WorkoutDayScreen(day: day),
+                )),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
