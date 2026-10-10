@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
 import '../data/prescription_repository.dart';
+import '../../workout/presentation/workout_providers.dart';
+import '../../workout/presentation/workout_session_screen.dart';
 import 'prescription_form_sheet.dart';
 import 'prescription_providers.dart';
 
@@ -51,6 +53,42 @@ class WorkoutDayScreen extends ConsumerWidget {
     if (confirmed == true) {
       await ref.read(prescriptionRepositoryProvider).remove(item.prescription.id);
     }
+  }
+
+  void _openSession(BuildContext context, int sessionId) {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => WorkoutSessionScreen(sessionId: sessionId),
+    ));
+  }
+
+  Future<void> _start(BuildContext context, WidgetRef ref) async {
+    final repo = ref.read(sessionRepositoryProvider);
+    final active = await repo.findActiveSession();
+    if (!context.mounted) return;
+    if (active != null) {
+      final resume = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Workout in progress'),
+          content: const Text(
+              'Finish or discard the current workout before starting a new one.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text('Resume'),
+            ),
+          ],
+        ),
+      );
+      if (resume == true && context.mounted) _openSession(context, active.id);
+      return;
+    }
+    final id = await repo.startSession(day.id);
+    if (context.mounted) _openSession(context, id);
   }
 
   @override
@@ -102,6 +140,18 @@ class WorkoutDayScreen extends ConsumerWidget {
           );
         },
       ),
+      bottomNavigationBar: (items.value ?? const []).isEmpty
+          ? null
+          : SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: FilledButton.icon(
+                  icon: const Icon(Icons.play_arrow),
+                  label: const Text('Start workout'),
+                  onPressed: () => _start(context, ref),
+                ),
+              ),
+            ),
       floatingActionButton: FloatingActionButton(
         tooltip: 'Add exercise',
         onPressed: () => showPrescriptionForm(context, dayId: day.id),
