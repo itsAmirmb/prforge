@@ -8,6 +8,9 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../backup/domain/backup_format.dart';
 import '../../backup/presentation/backup_providers.dart';
+import '../../programs/data/program_importer.dart';
+import '../../programs/domain/program_template.dart';
+import '../../../app/providers.dart';
 import '../../workout/presentation/workout_providers.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -100,6 +103,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _importProgram() async {
+    final picked = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['json'],
+      withData: true,
+    );
+    final bytes = picked?.files.single.bytes;
+    if (bytes == null) return;
+
+    setState(() => _busy = true);
+    try {
+      final result =
+          await ProgramImporter(ref.read(databaseProvider)).importJson(utf8.decode(bytes));
+      _say('Imported "${result.programName}": ${result.days} days, '
+          '${result.prescriptions} exercises '
+          '(${result.exercisesCreated} new, ${result.exercisesReused} existing).');
+    } on ProgramTemplateException catch (e) {
+      _say(e.message);
+    } catch (e) {
+      _say('Import failed: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,6 +135,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       body: ListView(
         children: [
           if (_busy) const LinearProgressIndicator(),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
+            child: Text('Programs'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.playlist_add),
+            title: const Text('Import program'),
+            subtitle: const Text('Add a program from a JSON file (keeps your data)'),
+            enabled: !_busy,
+            onTap: _importProgram,
+          ),
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 16, 16, 4),
             child: Text('Backup'),
