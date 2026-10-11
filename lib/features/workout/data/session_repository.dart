@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../programs/domain/rep_scheme.dart';
 import '../domain/progressive_loading.dart';
 import '../domain/session_blocks.dart';
 
@@ -77,7 +78,9 @@ class SessionRepository {
                   prescriptionId: Value(p.id),
                   setKind: Value(p.setType),
                   weightKg: Value(weight),
-                  reps: Value(p.targetReps),
+                  reps: Value(repsForSet(i,
+                      scheme: parseRepScheme(p.repScheme),
+                      fallback: p.targetReps)),
                   // Superset membership is snapshotted so history keeps it
                   // after the plan changes.
                   supersetKey: Value(

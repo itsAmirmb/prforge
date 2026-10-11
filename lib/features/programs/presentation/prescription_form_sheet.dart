@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../exercises/presentation/exercise_providers.dart';
 import '../data/prescription_repository.dart';
+import '../domain/rep_scheme.dart';
 import 'prescription_providers.dart';
 
 /// Set types selectable when planning (warm-up sets are logged, not planned).
@@ -62,7 +63,9 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late final ExercisePrescription? _p = widget.existing?.prescription;
   late final _sets = TextEditingController(text: '${_p?.targetSets ?? 3}');
-  late final _reps = TextEditingController(text: _p?.targetReps?.toString());
+  late final _reps = TextEditingController(
+      text: parseRepScheme(_p?.repScheme)?.join(', ') ??
+          _p?.targetReps?.toString());
   late final _weight =
       TextEditingController(text: _formatWeight(_p?.targetWeightKg));
   late final _rest = TextEditingController(text: _p?.restSeconds?.toString());
@@ -96,12 +99,23 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
   static double? _parseWeight(String text) =>
       double.tryParse(text.trim().replaceAll(',', '.'));
 
+  /// Reps field: one number ("10") or one per set ("12, 10, 8, 8").
+  List<int>? get _repList => parseRepsInput(_reps.text);
+
+  static String? _validateReps(String? v) {
+    if (v == null || v.trim().isEmpty) return null;
+    return parseRepsInput(v) == null
+        ? 'Use whole numbers >= 1, e.g. 10 or 12, 10, 8, 8'
+        : null;
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     final draft = PrescriptionDraft(
       exerciseId: _exerciseId!,
       targetSets: widget.lockedSets ?? int.parse(_sets.text.trim()),
-      targetReps: int.tryParse(_reps.text.trim()),
+      targetReps: _repList?.first,
+      repScheme: (_repList?.length ?? 0) > 1 ? _repList : null,
       targetWeightKg: _parseWeight(_weight.text),
       setType: _setType,
       restSeconds: int.tryParse(_rest.text.trim()),
@@ -176,9 +190,11 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
                     Expanded(
                       child: TextFormField(
                         controller: _reps,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Reps'),
-                        validator: (v) => _optionalInt(v, min: 1),
+                        keyboardType: TextInputType.text,
+                        decoration: const InputDecoration(
+                            labelText: 'Reps',
+                            hintText: '10  or  12, 10, 8, 8'),
+                        validator: _validateReps,
                       ),
                     ),
                   ],

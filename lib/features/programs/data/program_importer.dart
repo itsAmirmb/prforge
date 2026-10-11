@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
 import '../domain/program_template.dart';
+import '../domain/rep_scheme.dart';
 
 class ProgramImportResult {
   const ProgramImportResult({
@@ -92,6 +93,7 @@ class ProgramImporter {
                   orderIndex: index++,
                   targetSets: Value(e.sets),
                   targetReps: Value(e.reps),
+                  repScheme: Value(formatRepScheme(e.repScheme)),
                   targetWeightKg: Value(e.weightKg),
                   setType: Value(e.type),
                   supersetGroupId: Value(groupId),

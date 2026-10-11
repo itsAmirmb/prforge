@@ -49,6 +49,10 @@ class ExercisePrescriptions extends Table {
   IntColumn get orderIndex => integer()();
   IntColumn get targetSets => integer().withDefault(const Constant(3))();
   IntColumn get targetReps => integer().nullable()();
+
+  /// Optional reps per set, comma separated ("12,10,8,8"). When set it wins
+  /// over [targetReps]; sets beyond the list reuse the last value.
+  TextColumn get repScheme => text().nullable()();
   RealColumn get targetWeightKg => real().nullable()();
   IntColumn get setType => intEnum<SetKind>().withDefault(const Constant(0))();
   IntColumn get supersetGroupId =>

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/utils/format.dart';
 import '../data/prescription_repository.dart';
+import '../domain/rep_scheme.dart';
 import 'prescription_form_sheet.dart';
 import 'prescription_providers.dart';
 import 'superset_form_sheet.dart';
@@ -15,10 +16,14 @@ const _setTypeLabels = {
 };
 
 String prescriptionSummary(ExercisePrescription p) {
+  final scheme = parseRepScheme(p.repScheme);
   return [
-    p.targetReps != null
-        ? '${p.targetSets} × ${p.targetReps}'
-        : '${p.targetSets} sets',
+    if (scheme != null)
+      '${p.targetSets} sets: ${scheme.join(' · ')}'
+    else if (p.targetReps != null)
+      '${p.targetSets} × ${p.targetReps}'
+    else
+      '${p.targetSets} sets',
     if (p.targetWeightKg != null) '${formatWeight(p.targetWeightKg)} kg',
     if (p.restSeconds != null) 'rest ${p.restSeconds}s',
     if (_setTypeLabels[p.setType] != null) _setTypeLabels[p.setType]!,

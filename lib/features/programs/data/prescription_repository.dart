@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
+import '../domain/rep_scheme.dart';
 import 'day_structure.dart';
 
 /// Planned values for one exercise inside a workout day.
@@ -9,6 +10,7 @@ class PrescriptionDraft {
     required this.exerciseId,
     this.targetSets = 3,
     this.targetReps,
+    this.repScheme,
     this.targetWeightKg,
     this.setType = SetKind.normal,
     this.restSeconds,
@@ -18,6 +20,9 @@ class PrescriptionDraft {
   final int exerciseId;
   final int targetSets;
   final int? targetReps;
+
+  /// Reps per set; the first value is also kept as [targetReps].
+  final List<int>? repScheme;
 
   /// Always kg; null = no target (weight is decided per session).
   final double? targetWeightKg;
@@ -31,6 +36,9 @@ class PrescriptionDraft {
     }
     if (targetReps != null && targetReps! < 1) {
       throw ArgumentError.value(targetReps, 'targetReps', 'must be >= 1');
+    }
+    if (repScheme != null && !isValidRepScheme(repScheme!)) {
+      throw ArgumentError.value(repScheme, 'repScheme', 'every value must be >= 1');
     }
     if (targetWeightKg != null && targetWeightKg! < 0) {
       throw ArgumentError.value(targetWeightKg, 'targetWeightKg', 'must be >= 0');
@@ -86,6 +94,7 @@ class PrescriptionRepository {
             orderIndex: next,
             targetSets: Value(draft.targetSets),
             targetReps: Value(draft.targetReps),
+            repScheme: Value(formatRepScheme(draft.repScheme)),
             targetWeightKg: Value(draft.targetWeightKg),
             setType: Value(draft.setType),
             restSeconds: Value(draft.restSeconds),
@@ -102,6 +111,7 @@ class PrescriptionRepository {
         exerciseId: Value(draft.exerciseId),
         targetSets: Value(draft.targetSets),
         targetReps: Value(draft.targetReps),
+        repScheme: Value(formatRepScheme(draft.repScheme)),
         targetWeightKg: Value(draft.targetWeightKg),
         setType: Value(draft.setType),
         restSeconds: Value(draft.restSeconds),

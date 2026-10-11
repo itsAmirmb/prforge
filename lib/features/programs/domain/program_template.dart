@@ -25,6 +25,7 @@ class TemplateExercise extends TemplateEntry {
     required this.name,
     required this.sets,
     this.reps,
+    this.repScheme,
     this.weightKg,
     this.type = SetKind.normal,
     this.restSeconds,
@@ -34,6 +35,9 @@ class TemplateExercise extends TemplateEntry {
   final String name;
   final int sets;
   final int? reps;
+
+  /// Reps per set (e.g. [12, 10, 8, 8]); when given, [reps] is its first value.
+  final List<int>? repScheme;
   final double? weightKg;
   final SetKind type;
   final int? restSeconds;
@@ -187,6 +191,17 @@ TemplateExercise _exercise(Map<String, dynamic> raw, String where) {
     }
     type = match.first;
   }
+  final schemeRaw = raw['repScheme'];
+  List<int>? scheme;
+  if (schemeRaw != null) {
+    if (schemeRaw is! List ||
+        schemeRaw.isEmpty ||
+        schemeRaw.any((r) => r is! int || r < 1)) {
+      throw ProgramTemplateException(
+          '$where: "repScheme" must be a list of whole numbers ≥ 1.');
+    }
+    scheme = schemeRaw.cast<int>();
+  }
   final notes = raw['notes'];
   if (notes != null && notes is! String) {
     throw ProgramTemplateException('$where: "notes" must be text.');
@@ -195,7 +210,8 @@ TemplateExercise _exercise(Map<String, dynamic> raw, String where) {
   return TemplateExercise(
     name: name,
     sets: _positive(raw, 'sets', where, required: true)!,
-    reps: _positive(raw, 'reps', where),
+    reps: _positive(raw, 'reps', where) ?? scheme?.first,
+    repScheme: scheme != null && scheme.length > 1 ? scheme : null,
     weightKg: (weight as num?)?.toDouble(),
     type: type,
     restSeconds: rest as int?,

@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
 import '../domain/day_entries.dart';
+import '../domain/rep_scheme.dart';
 import 'day_structure.dart';
 import 'prescription_repository.dart';
 
@@ -94,6 +95,7 @@ class SupersetRepository {
               orderIndex: 1 << 20,
               targetSets: Value(group.rounds),
               targetReps: Value(draft.targetReps),
+              repScheme: Value(formatRepScheme(draft.repScheme)),
               targetWeightKg: Value(draft.targetWeightKg),
               setType: Value(draft.setType),
               restSeconds: Value(draft.restSeconds),
