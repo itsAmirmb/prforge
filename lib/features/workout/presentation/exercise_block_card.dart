@@ -5,7 +5,7 @@ import '../../../core/database/app_database.dart';
 import '../domain/session_blocks.dart';
 import 'progressive_loading_sheet.dart';
 import 'set_actions.dart';
-import 'set_row.dart';
+import 'set_with_minis.dart';
 import 'workout_providers.dart';
 
 const _kindLabels = {
@@ -53,7 +53,7 @@ class ExerciseBlockCard extends ConsumerWidget {
                 ),
               ),
             for (var i = 0; i < block.sets.length; i++)
-              SetRow(
+              SetWithMinis(
                 key: ValueKey(block.sets[i].id),
                 log: block.sets[i],
                 number: i + 1,

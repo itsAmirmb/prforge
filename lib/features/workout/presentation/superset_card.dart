@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/session_blocks.dart';
 import 'progressive_loading_sheet.dart';
 import 'set_actions.dart';
-import 'set_row.dart';
+import 'set_with_minis.dart';
 import 'workout_providers.dart';
 
 /// A superset in a session: one card, sets grouped by round, every member's
@@ -46,7 +46,7 @@ class SupersetCard extends ConsumerWidget {
               ),
               for (final m in entry.members)
                 if (entry.setInRound(m, rounds[r]) case final set?)
-                  SetRow(
+                  SetWithMinis(
                     key: ValueKey(set.id),
                     log: set,
                     label: m.exercise.name,

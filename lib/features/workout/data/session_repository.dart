@@ -4,6 +4,14 @@ import '../../../core/database/app_database.dart';
 import '../domain/progressive_loading.dart';
 import '../domain/session_blocks.dart';
 
+/// A deleted set with its mini-sets, kept for Undo.
+class DeletedSet {
+  const DeletedSet(this.log, this.miniSets);
+
+  final SetLog log;
+  final List<MiniSetLog> miniSets;
+}
+
 /// Workout session persistence. Every change is written immediately, so an
 /// app crash or restart never loses logged data.
 class SessionRepository {
@@ -232,17 +240,30 @@ class SessionRepository {
     });
   }
 
-  /// Deletes a set and returns it so the caller can offer Undo.
-  Future<SetLog> deleteSet(int setId) async {
+  /// Deletes a set (and, through cascade, its mini-sets) and returns both so
+  /// the caller can offer Undo.
+  Future<DeletedSet> deleteSet(int setId) async {
     final log = await (_db.select(_db.setLogs)..where((l) => l.id.equals(setId)))
         .getSingle();
+    final minis = await (_db.select(_db.miniSetLogs)
+          ..where((m) => m.setLogId.equals(setId))
+          ..orderBy([
+            (m) => OrderingTerm.asc(m.miniSetIndex),
+            (m) => OrderingTerm.asc(m.id),
+          ]))
+        .get();
     await (_db.delete(_db.setLogs)..where((l) => l.id.equals(setId))).go();
-    return log;
+    return DeletedSet(log, minis);
   }
 
-  /// Re-inserts a set returned by [deleteSet] (same id, same position).
-  Future<void> restoreSet(SetLog log) async {
-    await _db.into(_db.setLogs).insert(log);
+  /// Re-inserts a set returned by [deleteSet] with its mini-sets (same ids).
+  Future<void> restoreSet(DeletedSet deleted) {
+    return _db.transaction(() async {
+      await _db.into(_db.setLogs).insert(deleted.log);
+      for (final m in deleted.miniSets) {
+        await _db.into(_db.miniSetLogs).insert(m);
+      }
+    });
   }
 
   // ───────── History lookup ─────────
