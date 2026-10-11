@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/exercises/presentation/exercise_list_screen.dart';
+import '../features/history/presentation/history_screen.dart';
 import '../features/programs/presentation/program_list_screen.dart';
 import '../features/workout/presentation/workout_providers.dart';
 import '../features/workout/presentation/workout_session_screen.dart';
@@ -25,7 +26,11 @@ class _AppShellState extends ConsumerState<AppShell> {
     return Scaffold(
       body: IndexedStack(
         index: _index,
-        children: const [ProgramListScreen(), ExerciseListScreen()],
+        children: const [
+          ProgramListScreen(),
+          HistoryScreen(),
+          ExerciseListScreen(),
+        ],
       ),
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
@@ -49,6 +54,7 @@ class _AppShellState extends ConsumerState<AppShell> {
             destinations: const [
               NavigationDestination(
                   icon: Icon(Icons.list_alt), label: 'Programs'),
+              NavigationDestination(icon: Icon(Icons.history), label: 'History'),
               NavigationDestination(
                   icon: Icon(Icons.fitness_center), label: 'Exercises'),
             ],
