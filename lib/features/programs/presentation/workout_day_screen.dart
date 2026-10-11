@@ -2,58 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
-import '../data/prescription_repository.dart';
 import '../../workout/presentation/workout_providers.dart';
 import '../../workout/presentation/workout_session_screen.dart';
+import '../data/prescription_repository.dart';
+import '../domain/day_entries.dart';
+import 'plan_entry_tiles.dart';
 import 'prescription_form_sheet.dart';
 import 'prescription_providers.dart';
-
-const _setTypeLabels = {
-  SetKind.restPause: 'Rest-Pause',
-  SetKind.drop: 'Drop set',
-  SetKind.amrap: 'AMRAP',
-};
-
-String _summary(ExercisePrescription p) {
-  String num(double w) =>
-      w == w.roundToDouble() ? w.toInt().toString() : w.toString();
-  return [
-    p.targetReps != null ? '${p.targetSets} × ${p.targetReps}' : '${p.targetSets} sets',
-    if (p.targetWeightKg != null) '${num(p.targetWeightKg!)} kg',
-    if (p.restSeconds != null) 'rest ${p.restSeconds}s',
-    if (_setTypeLabels[p.setType] != null) _setTypeLabels[p.setType]!,
-  ].join(' · ');
-}
 
 class WorkoutDayScreen extends ConsumerWidget {
   const WorkoutDayScreen({super.key, required this.day});
 
   final WorkoutDay day;
-
-  Future<void> _remove(
-      BuildContext context, WidgetRef ref, PrescriptionWithExercise item) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remove from plan?'),
-        content: Text(
-            '"${item.exercise.name}" will be removed from this day. Logged workouts are not affected.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true) {
-      await ref.read(prescriptionRepositoryProvider).remove(item.prescription.id);
-    }
-  }
 
   void _openSession(BuildContext context, int sessionId) {
     Navigator.of(context).push(MaterialPageRoute<void>(
@@ -94,6 +54,11 @@ class WorkoutDayScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(dayPrescriptionsProvider(day.id));
+    final groups = {
+      for (final g in ref.watch(daySupersetGroupsProvider(day.id)).value ??
+          const <SupersetGroup>[])
+        g.id: g,
+    };
 
     return Scaffold(
       appBar: AppBar(title: Text(day.name)),
@@ -105,36 +70,46 @@ class WorkoutDayScreen extends ConsumerWidget {
             return const Center(
                 child: Text('No exercises yet. Tap + to add one.'));
           }
+          final entries =
+              toEntries(list, (i) => i.prescription.supersetGroupId);
+          String keyOf(List<PrescriptionWithExercise> e) =>
+              e.first.prescription.supersetGroupId != null
+                  ? 'g${e.first.prescription.supersetGroupId}'
+                  : 'p${e.first.prescription.id}';
+
           return ReorderableListView.builder(
-            itemCount: list.length,
+            itemCount: entries.length,
             onReorder: (oldIndex, newIndex) {
               if (oldIndex < newIndex) newIndex -= 1;
-              final ids = [for (final i in list) i.prescription.id];
-              ids.insert(newIndex, ids.removeAt(oldIndex));
-              ref.read(prescriptionRepositoryProvider).reorder(ids);
+              final keys = [for (final e in entries) keyOf(e)];
+              keys.insert(newIndex, keys.removeAt(oldIndex));
+              ref
+                  .read(supersetRepositoryProvider)
+                  .reorderEntries(day.id, keys);
             },
             itemBuilder: (context, i) {
-              final item = list[i];
-              return ListTile(
-                key: ValueKey(item.prescription.id),
-                title: Text(item.exercise.name),
-                subtitle: Text(_summary(item.prescription)),
-                onTap: () => showPrescriptionForm(context,
-                    dayId: day.id, existing: item),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      tooltip: 'Remove',
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () => _remove(context, ref, item),
-                    ),
-                    ReorderableDragStartListener(
-                      index: i,
-                      child: const Icon(Icons.drag_handle),
-                    ),
-                  ],
-                ),
+              final entry = entries[i];
+              final groupId = entry.first.prescription.supersetGroupId;
+              final group = groupId == null ? null : groups[groupId];
+              if (group != null) {
+                return SupersetGroupCard(
+                  key: ValueKey(keyOf(entry)),
+                  dayId: day.id,
+                  group: group,
+                  members: entry,
+                  dragIndex: i,
+                );
+              }
+              final next = i + 1 < entries.length ? entries[i + 1] : null;
+              final nextIsSingle = next != null &&
+                  next.length == 1 &&
+                  next.first.prescription.supersetGroupId == null;
+              return SinglePrescriptionTile(
+                key: ValueKey(keyOf(entry)),
+                dayId: day.id,
+                item: entry.first,
+                dragIndex: i,
+                nextSingle: nextIsSingle ? next.first : null,
               );
             },
           );

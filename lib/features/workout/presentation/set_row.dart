@@ -11,12 +11,15 @@ class SetRow extends ConsumerStatefulWidget {
   const SetRow({
     super.key,
     required this.log,
-    required this.number,
+    this.number,
+    this.label,
     required this.onDelete,
   });
 
   final SetLog log;
-  final int number;
+  /// Set number, or [label] (exercise name) inside a superset round.
+  final int? number;
+  final String? label;
   final VoidCallback onDelete;
 
   @override
@@ -68,9 +71,15 @@ class _SetRowState extends ConsumerState<SetRow> {
       child: Row(
         children: [
           SizedBox(
-            width: 28,
-            child: Text('${widget.number}',
-                style: Theme.of(context).textTheme.titleMedium),
+            width: widget.label == null ? 28 : 76,
+            child: Text(
+              widget.label ?? '${widget.number}',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: widget.label == null
+                  ? Theme.of(context).textTheme.titleMedium
+                  : Theme.of(context).textTheme.bodySmall,
+            ),
           ),
           Expanded(
             child: TextField(

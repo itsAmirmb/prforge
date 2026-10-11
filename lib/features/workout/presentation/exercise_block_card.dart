@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
-import '../../../core/utils/format.dart';
 import '../domain/session_blocks.dart';
 import 'progressive_loading_sheet.dart';
+import 'set_actions.dart';
 import 'set_row.dart';
 import 'workout_providers.dart';
 
@@ -24,21 +24,6 @@ class ExerciseBlockCard extends ConsumerWidget {
 
   final int sessionId;
   final ExerciseBlock block;
-
-  Future<void> _delete(BuildContext context, WidgetRef ref, SetLog log) async {
-    final repo = ref.read(sessionRepositoryProvider);
-    final deleted = await repo.deleteSet(log.id);
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(SnackBar(
-        content: const Text('Set deleted'),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () => repo.restoreSet(deleted),
-        ),
-      ));
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,7 +48,7 @@ class ExerciseBlockCard extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 2, bottom: 6),
                 child: Text(
-                  'Last: ${last.map((s) => '${formatWeight(s.weightKg) ?? 'BW'}×${s.reps ?? '-'}').join('  ·  ')}',
+                  'Last: ${lastPerformanceText(last)}',
                   style: theme.textTheme.bodySmall,
                 ),
               ),
@@ -72,7 +57,7 @@ class ExerciseBlockCard extends ConsumerWidget {
                 key: ValueKey(block.sets[i].id),
                 log: block.sets[i],
                 number: i + 1,
-                onDelete: () => _delete(context, ref, block.sets[i]),
+                onDelete: () => deleteSetWithUndo(context, ref, block.sets[i]),
               ),
             Row(
               children: [

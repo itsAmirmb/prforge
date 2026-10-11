@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
+import 'day_structure.dart';
 
 /// Planned values for one exercise inside a workout day.
 class PrescriptionDraft {
@@ -110,6 +111,9 @@ class PrescriptionRepository {
   }
 
   /// Persists the given order (first id gets index 0, and so on).
+  ///
+  /// Only for days without supersets; the day screen uses
+  /// SupersetRepository.reorderEntries, which moves a superset as one unit.
   Future<void> reorder(List<int> orderedIds) {
     return _db.transaction(() async {
       for (var i = 0; i < orderedIds.length; i++) {
@@ -122,13 +126,20 @@ class PrescriptionRepository {
 
   /// Removes the exercise from the plan. Logged sets keep their exerciseId and
   /// only lose the link to the removed prescription, so history is untouched.
+  /// If it was a superset member, the group is repaired (dissolved when fewer
+  /// than 2 members remain).
   Future<void> remove(int id) {
     return _db.transaction(() async {
+      final row = await (_db.select(_db.exercisePrescriptions)
+            ..where((p) => p.id.equals(id)))
+          .getSingleOrNull();
+      if (row == null) return;
       await (_db.update(_db.setLogs)..where((l) => l.prescriptionId.equals(id)))
           .write(const SetLogsCompanion(prescriptionId: Value(null)));
       await (_db.delete(_db.exercisePrescriptions)
             ..where((p) => p.id.equals(id)))
           .go();
+      await DayStructure(_db).normalize(row.workoutDayId);
     });
   }
 

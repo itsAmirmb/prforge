@@ -49,3 +49,79 @@ List<ExerciseBlock> groupIntoBlocks(List<SetLogWithExercise> rows) {
       ),
   ];
 }
+
+/// One item of the session screen: a single exercise or a whole superset.
+sealed class SessionEntry {
+  const SessionEntry();
+
+  /// All exercise blocks inside this entry.
+  List<ExerciseBlock> get blocks;
+}
+
+class SingleEntry extends SessionEntry {
+  const SingleEntry(this.block);
+
+  final ExerciseBlock block;
+
+  @override
+  List<ExerciseBlock> get blocks => [block];
+}
+
+/// Sets that share a supersetKey: one block per member exercise, aligned by
+/// round (roundIndex).
+class SupersetEntry extends SessionEntry {
+  const SupersetEntry({required this.key, required this.members});
+
+  final String key;
+  final List<ExerciseBlock> members;
+
+  @override
+  List<ExerciseBlock> get blocks => members;
+
+  static int roundOf(SetLog set) => set.roundIndex ?? set.setIndex;
+
+  /// Distinct round numbers present, ascending.
+  List<int> get rounds {
+    final all = {
+      for (final m in members)
+        for (final s in m.sets) roundOf(s),
+    };
+    return all.toList()..sort();
+  }
+
+  /// The member's set in [round], or null if it has none (e.g. deleted).
+  SetLog? setInRound(ExerciseBlock member, int round) {
+    for (final s in member.sets) {
+      if (roundOf(s) == round) return s;
+    }
+    return null;
+  }
+}
+
+/// Groups session sets into screen entries in first-seen order. Sets with a
+/// supersetKey collapse into one [SupersetEntry]; everything else becomes a
+/// [SingleEntry] per prescription (see [groupIntoBlocks]).
+List<SessionEntry> groupIntoEntries(List<SetLogWithExercise> rows) {
+  final order = <String>[];
+  final groups = <String, List<SetLogWithExercise>>{};
+  for (final row in rows) {
+    final superset = row.log.supersetKey;
+    final token = superset != null
+        ? 's:$superset'
+        : 'p:${row.log.prescriptionId ?? -row.log.exerciseId}';
+    groups.putIfAbsent(token, () {
+      order.add(token);
+      return <SetLogWithExercise>[];
+    }).add(row);
+  }
+  return [
+    for (final token in order)
+      if (token.startsWith('s:'))
+        SupersetEntry(
+          key: token.substring(2),
+          members: groupIntoBlocks(groups[token]!),
+        )
+      else
+        SingleEntry(groupIntoBlocks(groups[token]!).single),
+  ];
+}

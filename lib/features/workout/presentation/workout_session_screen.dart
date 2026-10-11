@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/session_blocks.dart';
 import 'exercise_block_card.dart';
+import 'superset_card.dart';
 import 'workout_providers.dart';
 
 class WorkoutSessionScreen extends ConsumerWidget {
@@ -33,8 +34,11 @@ class WorkoutSessionScreen extends ConsumerWidget {
   }
 
   Future<void> _finish(
-      BuildContext context, WidgetRef ref, List<ExerciseBlock> blocks) async {
-    final sets = [for (final b in blocks) ...b.sets];
+      BuildContext context, WidgetRef ref, List<SessionEntry> entries) async {
+    final sets = [
+      for (final e in entries)
+        for (final b in e.blocks) ...b.sets,
+    ];
     final done = sets.where((s) => s.isCompleted).length;
     final pending = sets.length - done;
     if (done == 0) {
@@ -71,9 +75,12 @@ class WorkoutSessionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final blocksAsync = ref.watch(sessionBlocksProvider(sessionId));
-    final blocks = blocksAsync.value ?? const <ExerciseBlock>[];
-    final sets = [for (final b in blocks) ...b.sets];
+    final entriesAsync = ref.watch(sessionEntriesProvider(sessionId));
+    final entries = entriesAsync.value ?? const <SessionEntry>[];
+    final sets = [
+      for (final e in entries)
+        for (final b in e.blocks) ...b.sets,
+    ];
     final done = sets.where((s) => s.isCompleted).length;
 
     return Scaffold(
@@ -81,8 +88,8 @@ class WorkoutSessionScreen extends ConsumerWidget {
         title: Text('Workout · $done/${sets.length} sets'),
         actions: [
           TextButton(
-            onPressed: blocksAsync.hasValue
-                ? () => _finish(context, ref, blocks)
+            onPressed: entriesAsync.hasValue
+                ? () => _finish(context, ref, entries)
                 : null,
             child: const Text('Finish'),
           ),
@@ -94,7 +101,7 @@ class WorkoutSessionScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: blocksAsync.when(
+      body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (list) => list.isEmpty
@@ -102,11 +109,19 @@ class WorkoutSessionScreen extends ConsumerWidget {
             : ListView.builder(
                 padding: const EdgeInsets.only(bottom: 24),
                 itemCount: list.length,
-                itemBuilder: (_, i) => ExerciseBlockCard(
-                  key: ValueKey(list[i].prescriptionId ?? -list[i].exercise.id),
-                  sessionId: sessionId,
-                  block: list[i],
-                ),
+                itemBuilder: (_, i) => switch (list[i]) {
+                  SingleEntry(:final block) => ExerciseBlockCard(
+                      key: ValueKey(
+                          'b${block.prescriptionId ?? -block.exercise.id}'),
+                      sessionId: sessionId,
+                      block: block,
+                    ),
+                  SupersetEntry e => SupersetCard(
+                      key: ValueKey('s${e.key}'),
+                      sessionId: sessionId,
+                      entry: e,
+                    ),
+                },
               ),
       ),
     );

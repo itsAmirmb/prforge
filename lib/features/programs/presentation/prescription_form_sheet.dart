@@ -15,24 +15,43 @@ const _plannedSetTypes = {
 };
 
 /// Opens the add/edit sheet. Pass [existing] to edit.
+///
+/// For superset members pass [lockedSets] (the group's rounds): the sets field
+/// is hidden because rounds control it. Pass [groupId] to add a new exercise
+/// to that superset.
 Future<void> showPrescriptionForm(
   BuildContext context, {
   required int dayId,
   PrescriptionWithExercise? existing,
+  int? groupId,
+  int? lockedSets,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => PrescriptionFormSheet(dayId: dayId, existing: existing),
+    builder: (_) => PrescriptionFormSheet(
+      dayId: dayId,
+      existing: existing,
+      groupId: groupId,
+      lockedSets: lockedSets,
+    ),
   );
 }
 
 class PrescriptionFormSheet extends ConsumerStatefulWidget {
-  const PrescriptionFormSheet({super.key, required this.dayId, this.existing});
+  const PrescriptionFormSheet({
+    super.key,
+    required this.dayId,
+    this.existing,
+    this.groupId,
+    this.lockedSets,
+  });
 
   final int dayId;
   final PrescriptionWithExercise? existing;
+  final int? groupId;
+  final int? lockedSets;
 
   @override
   ConsumerState<PrescriptionFormSheet> createState() =>
@@ -81,7 +100,7 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
     if (!_formKey.currentState!.validate()) return;
     final draft = PrescriptionDraft(
       exerciseId: _exerciseId!,
-      targetSets: int.parse(_sets.text.trim()),
+      targetSets: widget.lockedSets ?? int.parse(_sets.text.trim()),
       targetReps: int.tryParse(_reps.text.trim()),
       targetWeightKg: _parseWeight(_weight.text),
       setType: _setType,
@@ -90,7 +109,11 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
     );
     final repo = ref.read(prescriptionRepositoryProvider);
     final existing = _p;
-    if (existing == null) {
+    if (existing == null && widget.groupId != null) {
+      await ref
+          .read(supersetRepositoryProvider)
+          .addMember(widget.groupId!, draft);
+    } else if (existing == null) {
       await repo.add(widget.dayId, draft);
     } else {
       await repo.update(existing.id, draft);
@@ -135,19 +158,21 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
                 ),
                 Row(
                   children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _sets,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'Sets'),
-                        validator: (v) =>
-                            _optionalInt(v, min: 1) ??
-                            ((v == null || v.trim().isEmpty)
-                                ? 'Required'
-                                : null),
+                    if (widget.lockedSets == null) ...[
+                      Expanded(
+                        child: TextFormField(
+                          controller: _sets,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(labelText: 'Sets'),
+                          validator: (v) =>
+                              _optionalInt(v, min: 1) ??
+                              ((v == null || v.trim().isEmpty)
+                                  ? 'Required'
+                                  : null),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
+                      const SizedBox(width: 12),
+                    ],
                     Expanded(
                       child: TextFormField(
                         controller: _reps,
@@ -158,6 +183,16 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
                     ),
                   ],
                 ),
+                if (widget.lockedSets != null)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                          'Sets = ${widget.lockedSets} rounds of the superset.',
+                          style: Theme.of(context).textTheme.bodySmall),
+                    ),
+                  ),
                 Row(
                   children: [
                     Expanded(

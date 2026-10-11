@@ -14,12 +14,12 @@ final activeSessionProvider = StreamProvider<WorkoutSession?>(
   (ref) => ref.watch(sessionRepositoryProvider).watchActiveSession(),
 );
 
-final sessionBlocksProvider =
-    StreamProvider.autoDispose.family<List<ExerciseBlock>, int>(
+final sessionEntriesProvider =
+    StreamProvider.autoDispose.family<List<SessionEntry>, int>(
   (ref, sessionId) => ref
       .watch(sessionRepositoryProvider)
       .watchSessionSets(sessionId)
-      .map(groupIntoBlocks),
+      .map(groupIntoEntries),
 );
 
 /// Last completed performance of an exercise (for the "Last:" line).

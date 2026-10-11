@@ -70,6 +70,11 @@ class SessionRepository {
                   setKind: Value(p.setType),
                   weightKg: Value(weight),
                   reps: Value(p.targetReps),
+                  // Superset membership is snapshotted so history keeps it
+                  // after the plan changes.
+                  supersetKey: Value(
+                      p.supersetGroupId == null ? null : 's${p.supersetGroupId}'),
+                  roundIndex: Value(p.supersetGroupId == null ? null : i),
                 ),
               );
         }
@@ -154,6 +159,7 @@ class SessionRepository {
           ..limit(1))
         .get();
     final last = block.isEmpty ? null : block.first;
+    final lastRound = last?.roundIndex;
     return _db.into(l).insert(
           SetLogsCompanion.insert(
             sessionId: sessionId,
@@ -163,8 +169,19 @@ class SessionRepository {
             setKind: Value(last?.setKind ?? SetKind.normal),
             weightKg: Value(last?.weightKg),
             reps: Value(last?.reps),
+            supersetKey: Value(last?.supersetKey),
+            roundIndex: Value(lastRound == null ? null : lastRound + 1),
           ),
         );
+  }
+
+  /// Adds one more set to every member of a superset (a new round).
+  Future<void> addRound(int sessionId, List<ExerciseBlock> members) {
+    return _db.transaction(() async {
+      for (final m in members) {
+        await addSet(sessionId, m.exercise.id, m.prescriptionId);
+      }
+    });
   }
 
   /// Applies stepped loading to the unfinished sets of one block: the first
