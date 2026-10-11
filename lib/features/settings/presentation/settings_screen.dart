@@ -59,14 +59,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       _say('Finish or discard the workout in progress before restoring.');
       return;
     }
-    final picked = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: const ['json'],
-      withData: true,
-    );
-    final bytes = picked?.files.single.bytes;
-    if (bytes == null) return;
-    if (!mounted) return;
+    final List<int>? bytes;
+    try {
+      final picked = await FilePicker.platform.pickFiles(withData: true);
+      bytes = picked?.files.single.bytes;
+    } catch (e) {
+      _say('Could not open the file picker: $e');
+      return;
+    }
+    if (bytes == null || !mounted) return;
 
     final ok = await showDialog<bool>(
       context: context,
@@ -104,18 +105,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _importProgram() async {
-    final picked = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: const ['json'],
-      withData: true,
-    );
-    final bytes = picked?.files.single.bytes;
-    if (bytes == null) return;
-
     setState(() => _busy = true);
     try {
-      final result =
-          await ProgramImporter(ref.read(databaseProvider)).importJson(utf8.decode(bytes));
+      // FileType.any: Android does not know a "json" filter and rejects it.
+      final picked = await FilePicker.platform.pickFiles(withData: true);
+      final bytes = picked?.files.single.bytes;
+      if (bytes == null) return; // cancelled
+
+      final result = await ProgramImporter(ref.read(databaseProvider))
+          .importJson(utf8.decode(bytes));
       _say('Imported "${result.programName}": ${result.days} days, '
           '${result.prescriptions} exercises '
           '(${result.exercisesCreated} new, ${result.exercisesReused} existing).');
