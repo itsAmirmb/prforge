@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
+import '../domain/progressive_loading.dart';
 import '../domain/session_blocks.dart';
 
 /// Workout session persistence. Every change is written immediately, so an
@@ -164,6 +165,54 @@ class SessionRepository {
             reps: Value(last?.reps),
           ),
         );
+  }
+
+  /// Applies stepped loading to the unfinished sets of one block: the first
+  /// [setsAtNewWeight] sets get [newWeight], the rest [previousWeight].
+  /// Completed sets are never touched. [reps], when given, is written to all
+  /// updated sets. Each set stays an independent SetLog.
+  Future<void> applyProgressiveLoading({
+    required int sessionId,
+    required int exerciseId,
+    required int? prescriptionId,
+    required double previousWeight,
+    required double newWeight,
+    required int setsAtNewWeight,
+    int? reps,
+  }) {
+    return _db.transaction(() async {
+      final l = _db.setLogs;
+      final editable = await (_db.select(l)
+            ..where((s) =>
+                s.sessionId.equals(sessionId) &
+                s.exerciseId.equals(exerciseId) &
+                (prescriptionId == null
+                    ? s.prescriptionId.isNull()
+                    : s.prescriptionId.equals(prescriptionId)) &
+                s.isCompleted.equals(false))
+            ..orderBy([
+              (s) => OrderingTerm.asc(s.setIndex),
+              (s) => OrderingTerm.asc(s.id),
+            ]))
+          .get();
+      if (editable.isEmpty) {
+        throw StateError('There are no unfinished sets to update.');
+      }
+      final plan = planProgressiveLoading(
+        totalSets: editable.length,
+        previousWeight: previousWeight,
+        newWeight: newWeight,
+        setsAtNewWeight: setsAtNewWeight,
+      );
+      for (var i = 0; i < editable.length; i++) {
+        await (_db.update(l)..where((s) => s.id.equals(editable[i].id))).write(
+          SetLogsCompanion(
+            weightKg: Value(plan[i].weight),
+            reps: reps == null ? const Value.absent() : Value(reps),
+          ),
+        );
+      }
+    });
   }
 
   /// Deletes a set and returns it so the caller can offer Undo.

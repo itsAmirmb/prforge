@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/utils/format.dart';
 import '../domain/session_blocks.dart';
+import 'progressive_loading_sheet.dart';
 import 'set_row.dart';
 import 'workout_providers.dart';
 
@@ -73,14 +74,37 @@ class ExerciseBlockCard extends ConsumerWidget {
                 number: i + 1,
                 onDelete: () => _delete(context, ref, block.sets[i]),
               ),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text('Add set'),
-                onPressed: () => ref.read(sessionRepositoryProvider).addSet(
-                    sessionId, block.exercise.id, block.prescriptionId),
-              ),
+            Row(
+              children: [
+                TextButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add set'),
+                  onPressed: () => ref.read(sessionRepositoryProvider).addSet(
+                      sessionId, block.exercise.id, block.prescriptionId),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.trending_up),
+                  label: const Text('Increase weight'),
+                  onPressed: () async {
+                    if (block.sets.every((s) => s.isCompleted)) {
+                      ScaffoldMessenger.of(context)
+                        ..clearSnackBars()
+                        ..showSnackBar(const SnackBar(
+                            content: Text('All sets of this exercise are done.')));
+                      return;
+                    }
+                    await showProgressiveLoadingSheet(
+                      context,
+                      sessionId: sessionId,
+                      block: block,
+                      last: last ?? const [],
+                    );
+                    // Make sure no set field keeps stale focus, so the new
+                    // values are always shown.
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  },
+                ),
+              ],
             ),
           ],
         ),
