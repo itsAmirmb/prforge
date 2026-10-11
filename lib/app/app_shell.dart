@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/exercises/presentation/exercise_list_screen.dart';
 import '../features/history/presentation/history_screen.dart';
 import '../features/programs/presentation/program_list_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
 import '../features/workout/presentation/workout_providers.dart';
 import '../features/workout/presentation/workout_session_screen.dart';
 
@@ -30,6 +31,7 @@ class _AppShellState extends ConsumerState<AppShell> {
           ProgramListScreen(),
           HistoryScreen(),
           ExerciseListScreen(),
+          SettingsScreen(),
         ],
       ),
       bottomNavigationBar: Column(
@@ -57,6 +59,8 @@ class _AppShellState extends ConsumerState<AppShell> {
               NavigationDestination(icon: Icon(Icons.history), label: 'History'),
               NavigationDestination(
                   icon: Icon(Icons.fitness_center), label: 'Exercises'),
+              NavigationDestination(
+                  icon: Icon(Icons.settings), label: 'Settings'),
             ],
           ),
         ],
