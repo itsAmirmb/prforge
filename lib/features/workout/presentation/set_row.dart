@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/utils/format.dart';
+import '../data/session_repository.dart';
+import 'rest_timer_state.dart';
 import 'workout_providers.dart';
 
 /// One set: weight, reps, done toggle, delete. Every edit is saved at once.
@@ -58,6 +60,17 @@ class _SetRowState extends ConsumerState<SetRow> {
     _weightFocus.dispose();
     _repsFocus.dispose();
     super.dispose();
+  }
+
+  /// Marks the set done or not done; completing it starts the rest timer.
+  Future<void> _toggle(SessionRepository repo) async {
+    final completing = !widget.log.isCompleted;
+    await repo.setCompleted(widget.log.id, completing);
+    if (!completing) return;
+    final rest = await repo.restAfterCompleting(widget.log.id);
+    if (rest != null && mounted) {
+      ref.read(restTimerProvider.notifier).start(rest);
+    }
   }
 
   @override
@@ -116,8 +129,7 @@ class _SetRowState extends ConsumerState<SetRow> {
             icon: Icon(log.isCompleted
                 ? Icons.check_circle
                 : Icons.radio_button_unchecked),
-            onPressed:
-                canToggle ? () => repo.setCompleted(log.id, !log.isCompleted) : null,
+            onPressed: canToggle ? () => _toggle(repo) : null,
           ),
           IconButton(
             tooltip: 'Delete set',

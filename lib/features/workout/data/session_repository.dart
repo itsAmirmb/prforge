@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../../core/database/app_database.dart';
 import '../../programs/domain/rep_scheme.dart';
 import '../domain/progressive_loading.dart';
+import '../domain/rest_timing.dart';
 import '../domain/session_blocks.dart';
 
 /// A deleted set with its mini-sets, kept for Undo.
@@ -267,6 +268,56 @@ class SessionRepository {
         await _db.into(_db.miniSetLogs).insert(m);
       }
     });
+  }
+
+  // ───────── Rest ─────────
+
+  /// Seconds to rest after [setId] was completed, or null for no timer.
+  /// Uses the plan's rest and, inside a superset, the group's rest values
+  /// (between members, and after the last set of a round).
+  Future<int?> restAfterCompleting(int setId) async {
+    final log = await (_db.select(_db.setLogs)..where((l) => l.id.equals(setId)))
+        .getSingleOrNull();
+    if (log == null || !log.isCompleted) return null;
+
+    final prescriptionId = log.prescriptionId;
+    final prescription = prescriptionId == null
+        ? null
+        : await (_db.select(_db.exercisePrescriptions)
+              ..where((p) => p.id.equals(prescriptionId)))
+            .getSingleOrNull();
+
+    final key = log.supersetKey;
+    if (key == null) {
+      return restSecondsAfterSet(
+          isSuperset: false,
+          roundComplete: true,
+          setRest: prescription?.restSeconds);
+    }
+
+    // The key is 's{groupId}' (see startSession).
+    final groupId = int.tryParse(key.substring(1));
+    final group = groupId == null
+        ? null
+        : await (_db.select(_db.supersetGroups)
+              ..where((g) => g.id.equals(groupId)))
+            .getSingleOrNull();
+    final round = log.roundIndex ?? log.setIndex;
+    final members = await (_db.select(_db.setLogs)
+          ..where((l) =>
+              l.sessionId.equals(log.sessionId) & l.supersetKey.equals(key)))
+        .get();
+    final roundComplete = members
+        .where((s) => (s.roundIndex ?? s.setIndex) == round)
+        .every((s) => s.isCompleted);
+
+    return restSecondsAfterSet(
+      isSuperset: true,
+      roundComplete: roundComplete,
+      setRest: prescription?.restSeconds,
+      betweenRest: group?.restBetweenSeconds,
+      afterRoundRest: group?.restAfterRoundSeconds,
+    );
   }
 
   // ───────── History lookup ─────────

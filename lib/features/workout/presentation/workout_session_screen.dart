@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/session_blocks.dart';
 import 'exercise_block_card.dart';
+import 'rest_timer_bar.dart';
+import 'rest_timer_state.dart';
 import 'superset_card.dart';
 import 'workout_providers.dart';
 
@@ -58,6 +60,7 @@ class WorkoutSessionScreen extends ConsumerWidget {
     );
     if (!ok) return;
     await ref.read(sessionRepositoryProvider).finishSession(sessionId);
+    ref.read(restTimerProvider.notifier).stop();
     if (context.mounted) Navigator.of(context).pop();
   }
 
@@ -70,6 +73,7 @@ class WorkoutSessionScreen extends ConsumerWidget {
     );
     if (!ok) return;
     await ref.read(sessionRepositoryProvider).discardSession(sessionId);
+    ref.read(restTimerProvider.notifier).stop();
     if (context.mounted) Navigator.of(context).pop();
   }
 
@@ -101,6 +105,7 @@ class WorkoutSessionScreen extends ConsumerWidget {
           ),
         ],
       ),
+      bottomNavigationBar: const RestTimerBar(),
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
