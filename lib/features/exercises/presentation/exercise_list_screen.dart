@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../progress/presentation/exercise_progress_screen.dart';
 import 'exercise_form_sheet.dart';
 import 'exercise_providers.dart';
 
@@ -74,12 +75,25 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
                 title: Text(e.name),
                 subtitle: subtitle.isEmpty ? null : Text(subtitle),
                 onTap: () => showExerciseForm(context, exercise: e),
-                trailing: IconButton(
-                  tooltip: _showArchived ? 'Restore' : 'Archive',
-                  icon: Icon(_showArchived
-                      ? Icons.unarchive_outlined
-                      : Icons.archive_outlined),
-                  onPressed: () => _setArchived(e, !_showArchived),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Progress',
+                      icon: const Icon(Icons.show_chart),
+                      onPressed: () =>
+                          Navigator.of(context).push(MaterialPageRoute<void>(
+                        builder: (_) => ExerciseProgressScreen(exercise: e),
+                      )),
+                    ),
+                    IconButton(
+                      tooltip: _showArchived ? 'Restore' : 'Archive',
+                      icon: Icon(_showArchived
+                          ? Icons.unarchive_outlined
+                          : Icons.archive_outlined),
+                      onPressed: () => _setArchived(e, !_showArchived),
+                    ),
+                  ],
                 ),
               );
             },
