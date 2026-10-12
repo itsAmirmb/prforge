@@ -33,3 +33,13 @@ String formatTime(DateTime t) {
   String two(int n) => n.toString().padLeft(2, '0');
   return '${two(d.hour)}:${two(d.minute)}';
 }
+
+/// Stopwatch text: "4:07", or "1:02:09" from one hour on.
+String formatStopwatch(Duration d) {
+  final total = d.isNegative ? 0 : d.inSeconds;
+  String two(int n) => n.toString().padLeft(2, '0');
+  final h = total ~/ 3600;
+  final m = (total % 3600) ~/ 60;
+  final s = total % 60;
+  return h > 0 ? '$h:${two(m)}:${two(s)}' : '$m:${two(s)}';
+}

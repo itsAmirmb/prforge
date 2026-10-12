@@ -15,6 +15,31 @@ class EntryTiming {
   Duration get duration => end.difference(start);
 }
 
+/// Start of an entry whose first set was completed at [before] (or that is
+/// being worked on right now, [before] = now): the latest completed set of
+/// another entry before it, else the session start.
+DateTime entryStart(
+  SessionEntry entry,
+  Iterable<SetLog> allSets,
+  DateTime sessionStart,
+  DateTime before,
+) {
+  final own = {
+    for (final b in entry.blocks)
+      for (final s in b.sets) s.id,
+  };
+  DateTime? previous;
+  for (final s in allSets) {
+    final t = s.completedAt;
+    if (t == null || !s.isCompleted || own.contains(s.id)) continue;
+    if (t.isBefore(before) && (previous == null || t.isAfter(previous))) {
+      previous = t;
+    }
+  }
+  if (previous != null) return previous;
+  return sessionStart.isBefore(before) ? sessionStart : before;
+}
+
 /// Timing of [entry] inside a session, or null when its sets carry no
 /// completion times (sessions logged before times were recorded).
 EntryTiming? entryTiming(
@@ -29,22 +54,8 @@ EntryTiming? entryTiming(
   ];
   if (times.isEmpty) return null;
   times.sort();
-  final first = times.first;
-  final end = times.last;
-
-  final own = {
-    for (final b in entry.blocks)
-      for (final s in b.sets) s.id,
-  };
-  var start = sessionStart.isBefore(first) ? sessionStart : first;
-  DateTime? previous;
-  for (final s in allSets) {
-    final t = s.completedAt;
-    if (t == null || !s.isCompleted || own.contains(s.id)) continue;
-    if (t.isBefore(first) && (previous == null || t.isAfter(previous))) {
-      previous = t;
-    }
-  }
-  if (previous != null) start = previous;
-  return EntryTiming(start: start, end: end);
+  return EntryTiming(
+    start: entryStart(entry, allSets, sessionStart, times.first),
+    end: times.last,
+  );
 }

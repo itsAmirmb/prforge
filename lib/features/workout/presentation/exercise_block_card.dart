@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
 import '../domain/session_blocks.dart';
+import 'entry_clock_chip.dart';
 import 'exercise_notes.dart';
 import 'last_sessions_hint.dart';
 import 'progressive_loading_sheet.dart';
@@ -40,11 +41,22 @@ class ExerciseBlockCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              kind == null
-                  ? block.exercise.name
-                  : '${block.exercise.name} · $kind',
-              style: theme.textTheme.titleMedium,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    kind == null
+                        ? block.exercise.name
+                        : '${block.exercise.name} · $kind',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, right: 8),
+                  child: EntryClockChip(
+                      sessionId: sessionId, entry: SingleEntry(block)),
+                ),
+              ],
             ),
             LastSessionsHint(exercise: block.exercise),
             ExerciseNotes(

@@ -16,13 +16,14 @@ part 'app_database.g.dart';
   WorkoutSessions,
   SetLogs,
   MiniSetLogs,
+  SettingEntries,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
       : super(executor ?? driftDatabase(name: 'prforge'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -33,6 +34,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 3) {
             await m.addColumn(setLogs, setLogs.completedAt);
+          }
+          if (from < 4) {
+            await m.createTable(settingEntries);
           }
         },
         beforeOpen: (details) async {

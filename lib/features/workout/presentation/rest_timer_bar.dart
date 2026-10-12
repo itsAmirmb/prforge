@@ -1,9 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/feedback/feedback_service.dart';
+import '../../settings/presentation/settings_providers.dart';
 import 'rest_timer_state.dart';
 
 String formatRest(Duration d) {
@@ -41,8 +42,9 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
     final timer = ref.read(restTimerProvider);
     if (timer == null) return;
     if (timer.remaining() <= Duration.zero) {
-      HapticFeedback.heavyImpact();
-      SystemSound.play(SystemSoundType.alert);
+      final settings = ref.read(userSettingsProvider);
+      ref.read(feedbackServiceProvider).restOver(
+          sound: settings.sound, vibration: settings.vibration);
       ref.read(restTimerProvider.notifier).stop();
     } else if (mounted) {
       setState(() {});

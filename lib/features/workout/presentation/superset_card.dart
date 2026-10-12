@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/session_blocks.dart';
+import 'entry_clock_chip.dart';
 import 'exercise_notes.dart';
 import 'last_sessions_hint.dart';
 import 'progressive_loading_sheet.dart';
@@ -29,9 +30,19 @@ class SupersetCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Superset · ${entry.members.map((m) => m.exercise.name).join(' + ')}',
-              style: theme.textTheme.titleMedium,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Superset · ${entry.members.map((m) => m.exercise.name).join(' + ')}',
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, right: 8),
+                  child: EntryClockChip(sessionId: sessionId, entry: entry),
+                ),
+              ],
             ),
             const SizedBox(height: 2),
             for (final m in entry.members) ...[

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/session_blocks.dart';
 import 'exercise_block_card.dart';
+import 'keep_screen_on.dart';
 import 'rest_timer_bar.dart';
 import 'rest_timer_state.dart';
 import 'superset_card.dart';
@@ -87,7 +88,8 @@ class WorkoutSessionScreen extends ConsumerWidget {
     ];
     final done = sets.where((s) => s.isCompleted).length;
 
-    return Scaffold(
+    return KeepScreenOn(
+        child: Scaffold(
       appBar: AppBar(
         title: Text('Workout · $done/${sets.length} sets'),
         bottom: PreferredSize(
@@ -147,6 +149,6 @@ class WorkoutSessionScreen extends ConsumerWidget {
                 ],
               ),
       ),
-    );
+    ));
   }
 }

@@ -115,3 +115,13 @@ class MiniSetLogs extends Table {
   IntColumn get reps => integer()();
   IntColumn get restSeconds => integer().nullable()();
 }
+
+/// User settings as key/value text rows (see UserSettings for the keys).
+/// Kept out of backups on purpose: they describe this device, not the data.
+class SettingEntries extends Table {
+  TextColumn get key => text()();
+  TextColumn get value => text()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}

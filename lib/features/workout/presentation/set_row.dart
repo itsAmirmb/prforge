@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/feedback/feedback_service.dart';
+import '../../settings/presentation/settings_providers.dart';
 import '../../../core/utils/format.dart';
 import '../data/session_repository.dart';
 import 'rest_timer_state.dart';
@@ -105,8 +107,10 @@ class _SetRowState extends ConsumerState<SetRow> {
     final completing = !widget.log.isCompleted;
     await repo.setCompleted(widget.log.id, completing);
     if (!completing) return;
-    HapticFeedback.lightImpact();
-    final rest = await repo.restAfterCompleting(widget.log.id);
+    final settings = ref.read(userSettingsProvider);
+    ref.read(feedbackServiceProvider).setDone(vibration: settings.vibration);
+    final rest = await repo.restAfterCompleting(widget.log.id,
+        defaultRest: settings.restSeconds);
     if (rest != null && mounted) {
       ref.read(restTimerProvider.notifier).start(rest);
     }

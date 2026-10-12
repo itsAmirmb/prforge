@@ -278,7 +278,8 @@ class SessionRepository {
   /// Seconds to rest after [setId] was completed, or null for no timer.
   /// Uses the plan's rest and, inside a superset, the group's rest values
   /// (between members, and after the last set of a round).
-  Future<int?> restAfterCompleting(int setId) async {
+  Future<int?> restAfterCompleting(int setId,
+      {int defaultRest = defaultRestSeconds}) async {
     final log = await (_db.select(_db.setLogs)..where((l) => l.id.equals(setId)))
         .getSingleOrNull();
     if (log == null || !log.isCompleted) return null;
@@ -295,7 +296,8 @@ class SessionRepository {
       return restSecondsAfterSet(
           isSuperset: false,
           roundComplete: true,
-          setRest: prescription?.restSeconds);
+          setRest: prescription?.restSeconds,
+          defaultRest: defaultRest);
     }
 
     // The key is 's{groupId}' (see startSession).
@@ -320,6 +322,7 @@ class SessionRepository {
       setRest: prescription?.restSeconds,
       betweenRest: group?.restBetweenSeconds,
       afterRoundRest: group?.restAfterRoundSeconds,
+      defaultRest: defaultRest,
     );
   }
 
