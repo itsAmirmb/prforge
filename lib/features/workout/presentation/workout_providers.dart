@@ -5,6 +5,7 @@ import '../../../core/database/app_database.dart';
 import '../data/mini_set_repository.dart';
 import '../data/session_repository.dart';
 import '../domain/session_blocks.dart';
+import '../domain/set_order.dart';
 
 final sessionRepositoryProvider = Provider<SessionRepository>(
   (ref) => SessionRepository(ref.watch(databaseProvider)),
@@ -45,4 +46,12 @@ final miniSetsBySetProvider =
     }
     return bySet;
   }),
+);
+
+/// The set to do next in a session (highlighted and scrolled to).
+final currentSetIdProvider = Provider.autoDispose.family<int?, int>(
+  (ref, sessionId) => currentSetIdOf(
+    performingOrder(
+        ref.watch(sessionEntriesProvider(sessionId)).value ?? const []),
+  ),
 );

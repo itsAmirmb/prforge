@@ -90,6 +90,13 @@ class WorkoutSessionScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Workout · $done/${sets.length} sets'),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(4),
+          child: LinearProgressIndicator(
+            value: sets.isEmpty ? 0 : done / sets.length,
+            minHeight: 4,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: entriesAsync.hasValue
@@ -111,22 +118,33 @@ class WorkoutSessionScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (list) => list.isEmpty
             ? const Center(child: Text('This workout has no sets.'))
-            : ListView.builder(
+            : ListView(
                 padding: const EdgeInsets.only(bottom: 24),
-                itemCount: list.length,
-                itemBuilder: (_, i) => switch (list[i]) {
-                  SingleEntry(:final block) => ExerciseBlockCard(
-                      key: ValueKey(
-                          'b${block.prescriptionId ?? -block.exercise.id}'),
-                      sessionId: sessionId,
-                      block: block,
+                children: [
+                  for (final entry in list)
+                    switch (entry) {
+                      SingleEntry(:final block) => ExerciseBlockCard(
+                          key: ValueKey(
+                              'b${block.prescriptionId ?? -block.exercise.id}'),
+                          sessionId: sessionId,
+                          block: block,
+                        ),
+                      SupersetEntry e => SupersetCard(
+                          key: ValueKey('s${e.key}'),
+                          sessionId: sessionId,
+                          entry: e,
+                        ),
+                    },
+                  if (sets.isNotEmpty && done == sets.length)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                      child: FilledButton.icon(
+                        icon: const Icon(Icons.flag),
+                        label: const Text('All sets done · Finish workout'),
+                        onPressed: () => _finish(context, ref, list),
+                      ),
                     ),
-                  SupersetEntry e => SupersetCard(
-                      key: ValueKey('s${e.key}'),
-                      sessionId: sessionId,
-                      entry: e,
-                    ),
-                },
+                ],
               ),
       ),
     );

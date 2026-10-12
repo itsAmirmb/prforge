@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -35,6 +36,43 @@ class _SetRowState extends ConsumerState<SetRow> {
   final _weightFocus = FocusNode();
   final _repsFocus = FocusNode();
 
+  @override
+  void initState() {
+    super.initState();
+    // Resuming a workout: bring the current set into view.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          ref.read(currentSetIdProvider(widget.log.sessionId)) ==
+              widget.log.id) {
+        _revealIfNeeded();
+      }
+    });
+  }
+
+  /// Scrolls the list so this row sits comfortably in view, unless it
+  /// already does.
+  void _revealIfNeeded() {
+    if (!mounted) return;
+    final scrollable = Scrollable.maybeOf(context);
+    final box = context.findRenderObject();
+    if (scrollable == null || box == null) return;
+    final viewport = RenderAbstractViewport.maybeOf(box);
+    if (viewport == null) return;
+    final position = scrollable.position;
+    final target = viewport
+        .getOffsetToReveal(box, 0.4)
+        .offset
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    if ((target - position.pixels).abs() < position.viewportDimension * 0.3) {
+      return;
+    }
+    position.animateTo(target,
+        duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+  }
+
+  void _selectAll(TextEditingController c) =>
+      c.selection = TextSelection(baseOffset: 0, extentOffset: c.text.length);
+
   static double? _parseWeight(String text) =>
       double.tryParse(text.trim().replaceAll(',', '.'));
 
@@ -67,6 +105,7 @@ class _SetRowState extends ConsumerState<SetRow> {
     final completing = !widget.log.isCompleted;
     await repo.setCompleted(widget.log.id, completing);
     if (!completing) return;
+    HapticFeedback.lightImpact();
     final rest = await repo.restAfterCompleting(widget.log.id);
     if (rest != null && mounted) {
       ref.read(restTimerProvider.notifier).start(rest);
@@ -78,9 +117,25 @@ class _SetRowState extends ConsumerState<SetRow> {
     final repo = ref.read(sessionRepositoryProvider);
     final log = widget.log;
     final canToggle = log.isCompleted || log.reps != null;
+    final scheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+    final isCurrent = ref.watch(currentSetIdProvider(log.sessionId)) == log.id;
+    // When this set becomes the one to do next, scroll to it.
+    ref.listen<int?>(currentSetIdProvider(log.sessionId), (_, next) {
+      if (next == log.id) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _revealIfNeeded());
+      }
+    });
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+      decoration: BoxDecoration(
+        color: isCurrent
+            ? scheme.primaryContainer.withValues(alpha: 0.45)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Row(
         children: [
           SizedBox(
@@ -103,8 +158,9 @@ class _SetRowState extends ConsumerState<SetRow> {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
-              decoration: const InputDecoration(
-                  labelText: 'kg', isDense: true, border: OutlineInputBorder()),
+              textInputAction: TextInputAction.next,
+              onTap: () => _selectAll(_weight),
+              decoration: const InputDecoration(labelText: 'kg'),
               onChanged: (v) => repo.setWeight(log.id, _parseWeight(v)),
             ),
           ),
@@ -115,10 +171,9 @@ class _SetRowState extends ConsumerState<SetRow> {
               focusNode: _repsFocus,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: const InputDecoration(
-                  labelText: 'reps',
-                  isDense: true,
-                  border: OutlineInputBorder()),
+              textInputAction: TextInputAction.done,
+              onTap: () => _selectAll(_reps),
+              decoration: const InputDecoration(labelText: 'reps'),
               onChanged: (v) => repo.setReps(log.id, int.tryParse(v.trim())),
             ),
           ),

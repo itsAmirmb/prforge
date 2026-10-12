@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_shell.dart';
+import 'theme.dart';
 
 class PrforgeApp extends StatelessWidget {
   const PrforgeApp({super.key});
@@ -11,12 +12,8 @@ class PrforgeApp extends StatelessWidget {
       title: 'PRForge',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
-      theme: ThemeData(colorSchemeSeed: Colors.deepOrange, useMaterial3: true),
-      darkTheme: ThemeData(
-        colorSchemeSeed: Colors.deepOrange,
-        brightness: Brightness.dark,
-        useMaterial3: true,
-      ),
+      theme: buildTheme(Brightness.light),
+      darkTheme: buildTheme(Brightness.dark),
       home: const AppShell(),
     );
   }
