@@ -93,6 +93,10 @@ class SetLogs extends Table {
   IntColumn get reps => integer().nullable()();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
 
+  /// When the set was marked done (null while not done, and for sets logged
+  /// before this column existed). Feeds per-exercise start/end/duration.
+  DateTimeColumn get completedAt => dateTime().nullable()();
+
   // Superset membership snapshot, so history keeps it after program edits.
   TextColumn get supersetKey => text().nullable()();
   IntColumn get roundIndex => integer().nullable()();

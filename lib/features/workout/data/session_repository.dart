@@ -149,8 +149,11 @@ class SessionRepository {
     if (completed && log.reps == null) {
       throw StateError('Enter reps before completing the set.');
     }
-    await (_db.update(_db.setLogs)..where((l) => l.id.equals(setId)))
-        .write(SetLogsCompanion(isCompleted: Value(completed)));
+    // Keep the original time when an already-done set is "completed" again.
+    final stamp = completed ? (log.completedAt ?? DateTime.now()) : null;
+    await (_db.update(_db.setLogs)..where((l) => l.id.equals(setId))).write(
+        SetLogsCompanion(
+            isCompleted: Value(completed), completedAt: Value(stamp)));
   }
 
   /// Adds a set at the end of a block, copying weight and reps of the

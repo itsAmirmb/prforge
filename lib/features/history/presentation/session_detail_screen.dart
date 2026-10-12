@@ -7,6 +7,7 @@ import '../../workout/domain/rest_pause.dart';
 import '../../workout/domain/session_blocks.dart';
 import '../../workout/presentation/workout_providers.dart';
 import '../data/history_repository.dart';
+import '../domain/entry_timing.dart';
 import '../domain/set_text.dart';
 import 'history_providers.dart';
 import 'history_screen.dart';
@@ -70,7 +71,12 @@ class SessionDetailScreen extends ConsumerWidget {
       body: entries.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (list) => ListView(
+        data: (list) {
+          final allSets = [
+            for (final e in list)
+              for (final b in e.blocks) ...b.sets,
+          ];
+          return ListView(
           padding: const EdgeInsets.only(bottom: 24),
           children: [
             Padding(
@@ -82,11 +88,39 @@ class SessionDetailScreen extends ConsumerWidget {
             ),
             for (final e in list)
               switch (e) {
-                SingleEntry() => _BlockCard(block: e.block, minis: minis),
-                SupersetEntry() => _SupersetCard(entry: e, minis: minis),
+                SingleEntry() => _BlockCard(
+                    block: e.block,
+                    minis: minis,
+                    timing: entryTiming(e, allSets, summary.session.startedAt)),
+                SupersetEntry() => _SupersetCard(
+                    entry: e,
+                    minis: minis,
+                    timing: entryTiming(e, allSets, summary.session.startedAt)),
               },
           ],
-        ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Timing line: "09:12 – 09:21 · 9m".
+class _TimingLine extends StatelessWidget {
+  const _TimingLine(this.timing);
+
+  final EntryTiming? timing;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = timing;
+    if (t == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Text(
+        '${formatTime(t.start)} – ${formatTime(t.end)} · ${formatDuration(t.duration)}',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant),
       ),
     );
   }
@@ -119,10 +153,12 @@ List<Widget> _setLines(
 }
 
 class _BlockCard extends StatelessWidget {
-  const _BlockCard({required this.block, required this.minis});
+  const _BlockCard(
+      {required this.block, required this.minis, required this.timing});
 
   final ExerciseBlock block;
   final Map<int, List<MiniSetLog>> minis;
+  final EntryTiming? timing;
 
   @override
   Widget build(BuildContext context) {
@@ -138,6 +174,7 @@ class _BlockCard extends StatelessWidget {
               kind == null ? block.exercise.name : '${block.exercise.name} · $kind',
               style: Theme.of(context).textTheme.titleMedium,
             ),
+            _TimingLine(timing),
             const SizedBox(height: 6),
             for (var i = 0; i < block.sets.length; i++)
               ..._setLines(context, block.sets[i], minis,
@@ -150,10 +187,12 @@ class _BlockCard extends StatelessWidget {
 }
 
 class _SupersetCard extends StatelessWidget {
-  const _SupersetCard({required this.entry, required this.minis});
+  const _SupersetCard(
+      {required this.entry, required this.minis, required this.timing});
 
   final SupersetEntry entry;
   final Map<int, List<MiniSetLog>> minis;
+  final EntryTiming? timing;
 
   @override
   Widget build(BuildContext context) {
@@ -169,6 +208,7 @@ class _SupersetCard extends StatelessWidget {
               'Superset · ${entry.members.map((m) => m.exercise.name).join(' + ')}',
               style: theme.textTheme.titleMedium,
             ),
+            _TimingLine(timing),
             for (var r = 0; r < entry.rounds.length; r++) ...[
               const SizedBox(height: 8),
               Text('Round ${r + 1}', style: theme.textTheme.labelLarge),

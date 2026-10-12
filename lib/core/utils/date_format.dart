@@ -26,3 +26,10 @@ String formatDate(DateTime t) {
   final d = t.toLocal();
   return '${_weekdays[d.weekday - 1]}, ${d.day} ${_months[d.month - 1]} ${d.year}';
 }
+
+/// "09:05" (local time, 24h).
+String formatTime(DateTime t) {
+  final d = t.toLocal();
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(d.hour)}:${two(d.minute)}';
+}
