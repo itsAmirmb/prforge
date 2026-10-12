@@ -20,3 +20,9 @@ String formatDuration(Duration d) {
   if (minutes < 60) return '${minutes}m';
   return '${minutes ~/ 60}h ${minutes % 60}m';
 }
+
+/// "Sun, 11 Oct 2026" (local time).
+String formatDate(DateTime t) {
+  final d = t.toLocal();
+  return '${_weekdays[d.weekday - 1]}, ${d.day} ${_months[d.month - 1]} ${d.year}';
+}

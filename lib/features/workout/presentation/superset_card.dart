@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/session_blocks.dart';
+import 'exercise_notes.dart';
+import 'last_sessions_hint.dart';
 import 'progressive_loading_sheet.dart';
 import 'set_actions.dart';
 import 'set_with_minis.dart';
@@ -32,13 +34,13 @@ class SupersetCard extends ConsumerWidget {
               style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 2),
-            for (final m in entry.members)
-              Builder(builder: (context) {
-                final last = ref.watch(lastPerformanceProvider(m.exercise.id)).value;
-                if (last == null || last.isEmpty) return const SizedBox.shrink();
-                return Text('${m.exercise.name} last: ${lastPerformanceText(last)}',
-                    style: theme.textTheme.bodySmall);
-              }),
+            for (final m in entry.members) ...[
+              LastSessionsHint(exercise: m.exercise, showName: true),
+              ExerciseNotes(
+                  exercise: m.exercise,
+                  prescriptionId: m.prescriptionId,
+                  showName: true),
+            ],
             for (var r = 0; r < rounds.length; r++) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 10, bottom: 2),

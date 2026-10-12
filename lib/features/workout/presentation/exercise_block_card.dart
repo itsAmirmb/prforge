@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
 import '../domain/session_blocks.dart';
+import 'exercise_notes.dart';
+import 'last_sessions_hint.dart';
 import 'progressive_loading_sheet.dart';
 import 'set_actions.dart';
 import 'set_with_minis.dart';
@@ -44,14 +46,10 @@ class ExerciseBlockCard extends ConsumerWidget {
                   : '${block.exercise.name} · $kind',
               style: theme.textTheme.titleMedium,
             ),
-            if (last != null && last.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 2, bottom: 6),
-                child: Text(
-                  'Last: ${lastPerformanceText(last)}',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
+            LastSessionsHint(exercise: block.exercise),
+            ExerciseNotes(
+                exercise: block.exercise, prescriptionId: block.prescriptionId),
+            const SizedBox(height: 4),
             for (var i = 0; i < block.sets.length; i++)
               SetWithMinis(
                 key: ValueKey(block.sets[i].id),
