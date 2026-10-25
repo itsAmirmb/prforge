@@ -34,3 +34,26 @@ EntryClock? entryClock({
   return EntryClock(
       elapsed: elapsed.isNegative ? Duration.zero : elapsed, running: true);
 }
+
+/// Time of one [set]: from the end of the previous completed set of the
+/// session (or the session start) to its own completion, so the rest before
+/// it is included. The current set keeps counting. Null for sets that are
+/// neither done nor current.
+EntryClock? setClock({
+  required SetLog set,
+  required Iterable<SetLog> allSets,
+  required DateTime sessionStart,
+  required bool isCurrent,
+  required DateTime now,
+}) {
+  final doneAt = set.isCompleted ? set.completedAt : null;
+  if (isCurrent) {
+    final elapsed = now.difference(startBefore({set.id}, allSets, sessionStart, now));
+    return EntryClock(
+        elapsed: elapsed.isNegative ? Duration.zero : elapsed, running: true);
+  }
+  if (doneAt == null) return null;
+  return EntryClock(
+      elapsed: doneAt.difference(startBefore({set.id}, allSets, sessionStart, doneAt)),
+      running: false);
+}

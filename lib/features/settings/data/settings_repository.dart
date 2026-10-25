@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 
 import '../../../core/database/app_database.dart';
@@ -28,6 +27,15 @@ class SettingsRepository {
 
   Future<void> setKeepScreenOn(bool on) =>
       _put(SettingKeys.keepScreenOn, on.toString());
+
+  Future<void> setShowWorkoutClock(bool on) =>
+      _put(SettingKeys.showWorkoutClock, on.toString());
+
+  Future<void> setShowExerciseClock(bool on) =>
+      _put(SettingKeys.showExerciseClock, on.toString());
+
+  Future<void> setShowSetClock(bool on) =>
+      _put(SettingKeys.showSetClock, on.toString());
 
   Future<void> setThemeMode(ThemeMode mode) =>
       _put(SettingKeys.themeMode, mode.name);

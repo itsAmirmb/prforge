@@ -15,23 +15,19 @@ class EntryTiming {
   Duration get duration => end.difference(start);
 }
 
-/// Start of an entry whose first set was completed at [before] (or that is
-/// being worked on right now, [before] = now): the latest completed set of
-/// another entry before it, else the session start.
-DateTime entryStart(
-  SessionEntry entry,
+/// Start of a group of sets ([ownIds]) whose first set was completed at
+/// [before] (or that is being worked on right now, [before] = now): the
+/// latest completed set of anything else before it, else the session start.
+DateTime startBefore(
+  Set<int> ownIds,
   Iterable<SetLog> allSets,
   DateTime sessionStart,
   DateTime before,
 ) {
-  final own = {
-    for (final b in entry.blocks)
-      for (final s in b.sets) s.id,
-  };
   DateTime? previous;
   for (final s in allSets) {
     final t = s.completedAt;
-    if (t == null || !s.isCompleted || own.contains(s.id)) continue;
+    if (t == null || !s.isCompleted || ownIds.contains(s.id)) continue;
     if (t.isBefore(before) && (previous == null || t.isAfter(previous))) {
       previous = t;
     }
@@ -39,6 +35,18 @@ DateTime entryStart(
   if (previous != null) return previous;
   return sessionStart.isBefore(before) ? sessionStart : before;
 }
+
+/// [startBefore] for a whole exercise or superset.
+DateTime entryStart(
+  SessionEntry entry,
+  Iterable<SetLog> allSets,
+  DateTime sessionStart,
+  DateTime before,
+) =>
+    startBefore({
+      for (final b in entry.blocks)
+        for (final s in b.sets) s.id,
+    }, allSets, sessionStart, before);
 
 /// Timing of [entry] inside a session, or null when its sets carry no
 /// completion times (sessions logged before times were recorded).

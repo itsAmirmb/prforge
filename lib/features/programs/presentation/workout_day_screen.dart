@@ -79,8 +79,7 @@ class WorkoutDayScreen extends ConsumerWidget {
 
           return ReorderableListView.builder(
             itemCount: entries.length,
-            onReorder: (oldIndex, newIndex) {
-              if (oldIndex < newIndex) newIndex -= 1;
+            onReorderItem: (oldIndex, newIndex) {
               final keys = [for (final e in entries) keyOf(e)];
               keys.insert(newIndex, keys.removeAt(oldIndex));
               ref

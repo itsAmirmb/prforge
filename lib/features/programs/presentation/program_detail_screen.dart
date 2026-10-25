@@ -96,8 +96,7 @@ class ProgramDetailScreen extends ConsumerWidget {
           }
           return ReorderableListView.builder(
             itemCount: list.length,
-            onReorder: (oldIndex, newIndex) {
-              if (oldIndex < newIndex) newIndex -= 1;
+            onReorderItem: (oldIndex, newIndex) {
               final ids = [for (final d in list) d.id];
               ids.insert(newIndex, ids.removeAt(oldIndex));
               ref.read(workoutDayRepositoryProvider).reorder(ids);

@@ -45,7 +45,7 @@ class _ChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final present = [for (final v in values) if (v != null) v];
+    final present = [for (final v in values) ?v];
     if (present.isEmpty) return;
 
     const left = 44.0, top = 8.0, bottom = 8.0, right = 8.0;

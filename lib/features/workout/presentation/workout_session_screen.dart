@@ -7,6 +7,7 @@ import 'keep_screen_on.dart';
 import 'rest_timer_bar.dart';
 import 'rest_timer_state.dart';
 import 'superset_card.dart';
+import 'workout_clock_chip.dart';
 import 'workout_providers.dart';
 
 class WorkoutSessionScreen extends ConsumerWidget {
@@ -91,7 +92,14 @@ class WorkoutSessionScreen extends ConsumerWidget {
     return KeepScreenOn(
         child: Scaffold(
       appBar: AppBar(
-        title: Text('Workout · $done/${sets.length} sets'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Workout · $done/${sets.length} sets'),
+            WorkoutClockChip(sessionId: sessionId),
+          ],
+        ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(

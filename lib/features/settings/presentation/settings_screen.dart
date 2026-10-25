@@ -168,6 +168,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             value: settings.keepScreenOn,
             onChanged: ref.read(settingsRepositoryProvider).setKeepScreenOn,
           ),
+          const _SectionTitle('Workout timers'),
+          SwitchListTile(
+            secondary: const Icon(Icons.hourglass_bottom),
+            title: const Text('Workout time'),
+            subtitle: const Text('Total time since the workout started'),
+            value: settings.showWorkoutClock,
+            onChanged: ref.read(settingsRepositoryProvider).setShowWorkoutClock,
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.timer_outlined),
+            title: const Text('Exercise time'),
+            subtitle: const Text('Time spent on each exercise'),
+            value: settings.showExerciseClock,
+            onChanged:
+                ref.read(settingsRepositoryProvider).setShowExerciseClock,
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.looks_one_outlined),
+            title: const Text('Set time'),
+            subtitle: const Text('Time of each set (from the previous set)'),
+            value: settings.showSetClock,
+            onChanged: ref.read(settingsRepositoryProvider).setShowSetClock,
+          ),
           const _SectionTitle('Appearance'),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),

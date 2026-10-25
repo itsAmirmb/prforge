@@ -203,8 +203,8 @@ class SupersetRepository {
     });
   }
 
-  /// Reorders whole day entries. Keys are 'p<id>' for a single exercise and
-  /// 'g<id>' for a superset; a superset moves as one unit.
+  /// Reorders whole day entries. Keys are `'p<id>'` for a single exercise and
+  /// `'g<id>'` for a superset; a superset moves as one unit.
   Future<void> reorderEntries(int dayId, List<String> orderedKeys) {
     return _db.transaction(() async {
       final entries =

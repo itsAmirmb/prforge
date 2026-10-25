@@ -35,6 +35,7 @@ SingleEntry single(int exerciseId, List<SetLog> sets) => SingleEntry(
     ExerciseBlock(exercise: ex(exerciseId), prescriptionId: exerciseId, sets: sets));
 
 void main() {
+  setClockTests();
   test('current first exercise counts from the session start', () {
     final a = single(1, [set(1, 1, null), set(2, 1, null)]);
     final c = entryClock(
@@ -93,5 +94,38 @@ void main() {
             isCurrent: false,
             now: at(5)),
         isNull);
+  });
+}
+
+void setClockTests() {
+  group('setClock', () {
+    final s1 = set(1, 1, 2);
+    final s2 = set(2, 1, 6);
+    final s3 = set(3, 1, null);
+    final all = [s1, s2, s3];
+
+    test('first set counts from the session start, next from the previous set', () {
+      final c1 = setClock(
+          set: s1, allSets: all, sessionStart: t0, isCurrent: false, now: at(10))!;
+      expect(c1.elapsed, const Duration(minutes: 2));
+      expect(c1.running, isFalse);
+      final c2 = setClock(
+          set: s2, allSets: all, sessionStart: t0, isCurrent: false, now: at(10))!;
+      expect(c2.elapsed, const Duration(minutes: 4));
+    });
+
+    test('current set keeps counting from the last completed set', () {
+      final c = setClock(
+          set: s3, allSets: all, sessionStart: t0, isCurrent: true, now: at(9))!;
+      expect(c.running, isTrue);
+      expect(c.elapsed, const Duration(minutes: 3));
+    });
+
+    test('a set that is neither done nor current has no clock', () {
+      expect(
+          setClock(
+              set: s3, allSets: all, sessionStart: t0, isCurrent: false, now: at(9)),
+          isNull);
+    });
   });
 }

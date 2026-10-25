@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/utils/format.dart';
 import '../data/session_repository.dart';
+import 'entry_clock_chip.dart';
 import 'workout_actions.dart';
 import 'workout_providers.dart';
 
@@ -133,60 +134,69 @@ class _SetRowState extends ConsumerState<SetRow> {
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: widget.label == null ? 28 : 76,
-            child: Text(
-              widget.label ?? '${widget.number}',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: widget.label == null
-                  ? Theme.of(context).textTheme.titleMedium
-                  : Theme.of(context).textTheme.bodySmall,
-            ),
+          Row(
+            children: [
+              SizedBox(
+                width: widget.label == null ? 28 : 76,
+                child: Text(
+                  widget.label ?? '${widget.number}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: widget.label == null
+                      ? Theme.of(context).textTheme.titleMedium
+                      : Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _weight,
+                  focusNode: _weightFocus,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                  ],
+                  textInputAction: TextInputAction.next,
+                  onTap: () => _selectAll(_weight),
+                  decoration: const InputDecoration(labelText: 'kg'),
+                  onChanged: (v) => repo.setWeight(log.id, _parseWeight(v)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _reps,
+                  focusNode: _repsFocus,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  textInputAction: TextInputAction.done,
+                  onTap: () => _selectAll(_reps),
+                  decoration: const InputDecoration(labelText: 'reps'),
+                  onChanged: (v) => repo.setReps(log.id, int.tryParse(v.trim())),
+                ),
+              ),
+              IconButton(
+                tooltip: log.isCompleted ? 'Mark not done' : 'Mark done',
+                iconSize: 30,
+                color: log.isCompleted ? Theme.of(context).colorScheme.primary : null,
+                icon: Icon(log.isCompleted
+                    ? Icons.check_circle
+                    : Icons.radio_button_unchecked),
+                onPressed: canToggle ? () => _toggle(repo) : null,
+              ),
+              IconButton(
+                tooltip: 'Delete set',
+                icon: const Icon(Icons.close),
+                onPressed: widget.onDelete,
+              ),
+            ],
           ),
-          Expanded(
-            child: TextField(
-              controller: _weight,
-              focusNode: _weightFocus,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
-              textInputAction: TextInputAction.next,
-              onTap: () => _selectAll(_weight),
-              decoration: const InputDecoration(labelText: 'kg'),
-              onChanged: (v) => repo.setWeight(log.id, _parseWeight(v)),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              controller: _reps,
-              focusNode: _repsFocus,
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              textInputAction: TextInputAction.done,
-              onTap: () => _selectAll(_reps),
-              decoration: const InputDecoration(labelText: 'reps'),
-              onChanged: (v) => repo.setReps(log.id, int.tryParse(v.trim())),
-            ),
-          ),
-          IconButton(
-            tooltip: log.isCompleted ? 'Mark not done' : 'Mark done',
-            iconSize: 30,
-            color: log.isCompleted ? Theme.of(context).colorScheme.primary : null,
-            icon: Icon(log.isCompleted
-                ? Icons.check_circle
-                : Icons.radio_button_unchecked),
-            onPressed: canToggle ? () => _toggle(repo) : null,
-          ),
-          IconButton(
-            tooltip: 'Delete set',
-            icon: const Icon(Icons.close),
-            onPressed: widget.onDelete,
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: SetClockChip(log: log),
           ),
         ],
       ),

@@ -9,6 +9,9 @@ abstract final class SettingKeys {
   static const vibration = 'vibration';
   static const keepScreenOn = 'keepScreenOn';
   static const themeMode = 'themeMode';
+  static const showWorkoutClock = 'showWorkoutClock';
+  static const showExerciseClock = 'showExerciseClock';
+  static const showSetClock = 'showSetClock';
 }
 
 /// Longest default rest that can be set (10 minutes).
@@ -22,6 +25,9 @@ class UserSettings {
     this.vibration = true,
     this.keepScreenOn = true,
     this.themeMode = ThemeMode.system,
+    this.showWorkoutClock = true,
+    this.showExerciseClock = true,
+    this.showSetClock = true,
   });
 
   static const defaults = UserSettings();
@@ -34,6 +40,12 @@ class UserSettings {
   /// Keep the screen on while a workout is open.
   final bool keepScreenOn;
   final ThemeMode themeMode;
+
+  /// Which stopwatches the workout screen shows: whole workout, each
+  /// exercise, each set.
+  final bool showWorkoutClock;
+  final bool showExerciseClock;
+  final bool showSetClock;
 
   factory UserSettings.fromMap(Map<String, String> map) {
     bool flag(String key, bool fallback) => switch (map[key]) {
@@ -51,6 +63,9 @@ class UserSettings {
       keepScreenOn: flag(SettingKeys.keepScreenOn, true),
       themeMode: ThemeMode.values.asNameMap()[map[SettingKeys.themeMode]] ??
           ThemeMode.system,
+      showWorkoutClock: flag(SettingKeys.showWorkoutClock, true),
+      showExerciseClock: flag(SettingKeys.showExerciseClock, true),
+      showSetClock: flag(SettingKeys.showSetClock, true),
     );
   }
 }

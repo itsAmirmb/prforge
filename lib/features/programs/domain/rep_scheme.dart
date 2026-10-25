@@ -1,4 +1,5 @@
 /// Reps per set, e.g. "12,10,8,8" (stored as text in the plan).
+library;
 
 /// Parses the stored text; null for empty or invalid input.
 List<int>? parseRepScheme(String? text) {
