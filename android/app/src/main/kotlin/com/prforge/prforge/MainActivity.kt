@@ -1,6 +1,7 @@
 package com.prforge.prforge
 
 import android.content.Context
+import android.content.Intent
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Build
@@ -15,9 +16,24 @@ import io.flutter.plugin.common.MethodChannel
 
 // Vibration, beep and keep-screen-on for the workout screen (no plugin
 // needed). Dart side: core/feedback/feedback_service.dart.
+// Also forwards the headset button long-press (VOICE_COMMAND intent) to Dart:
+// core/feedback/headset_service.dart.
 class MainActivity : FlutterActivity() {
+    private var headsetChannel: MethodChannel? = null
+
+    // The app is already running (singleTop) when the intent arrives. A cold
+    // start is ignored on purpose: there is no workout screen to act on yet.
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.action == Intent.ACTION_VOICE_COMMAND) {
+            headsetChannel?.invokeMethod("trigger", null)
+        }
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        headsetChannel =
+            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "prforge/headset")
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "prforge/feedback")
             .setMethodCallHandler { call, result ->
                 when (call.method) {

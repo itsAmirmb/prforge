@@ -4,11 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
-import '../../../core/feedback/feedback_service.dart';
-import '../../settings/presentation/settings_providers.dart';
 import '../../../core/utils/format.dart';
 import '../data/session_repository.dart';
-import 'rest_timer_state.dart';
+import 'workout_actions.dart';
 import 'workout_providers.dart';
 
 /// One set: weight, reps, done toggle, delete. Every edit is saved at once.
@@ -104,15 +102,10 @@ class _SetRowState extends ConsumerState<SetRow> {
 
   /// Marks the set done or not done; completing it starts the rest timer.
   Future<void> _toggle(SessionRepository repo) async {
-    final completing = !widget.log.isCompleted;
-    await repo.setCompleted(widget.log.id, completing);
-    if (!completing) return;
-    final settings = ref.read(userSettingsProvider);
-    ref.read(feedbackServiceProvider).setDone(vibration: settings.vibration);
-    final rest = await repo.restAfterCompleting(widget.log.id,
-        defaultRest: settings.restSeconds);
-    if (rest != null && mounted) {
-      ref.read(restTimerProvider.notifier).start(rest);
+    if (widget.log.isCompleted) {
+      await repo.setCompleted(widget.log.id, false);
+    } else {
+      await ref.read(workoutActionsProvider).completeSet(widget.log);
     }
   }
 

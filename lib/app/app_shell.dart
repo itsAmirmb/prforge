@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/feedback/headset_service.dart';
 import '../features/exercises/presentation/exercise_list_screen.dart';
 import '../features/history/presentation/history_screen.dart';
 import '../features/programs/presentation/program_list_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/workout/presentation/workout_actions.dart';
 import '../features/workout/presentation/workout_providers.dart';
 import '../features/workout/presentation/workout_session_screen.dart';
 
@@ -19,6 +23,21 @@ class AppShell extends ConsumerStatefulWidget {
 
 class _AppShellState extends ConsumerState<AppShell> {
   int _index = 0;
+  StreamSubscription<void>? _headsetSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Headset button long-press: tick the current set of the active workout.
+    _headsetSub = ref.read(headsetServiceProvider).triggers.listen(
+        (_) => ref.read(workoutActionsProvider).completeCurrentSet());
+  }
+
+  @override
+  void dispose() {
+    _headsetSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
