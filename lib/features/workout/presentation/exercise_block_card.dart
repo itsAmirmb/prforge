@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../progress/domain/plateau.dart';
 import '../domain/session_blocks.dart';
 import 'entry_clock_chip.dart';
 import 'exercise_notes.dart';
@@ -58,7 +59,9 @@ class ExerciseBlockCard extends ConsumerWidget {
                 ),
               ],
             ),
-            LastSessionsHint(exercise: block.exercise),
+            LastSessionsHint(
+                exercise: block.exercise,
+                currentWeight: heaviestWeight(block.sets)),
             ExerciseNotes(
                 exercise: block.exercise, prescriptionId: block.prescriptionId),
             const SizedBox(height: 4),

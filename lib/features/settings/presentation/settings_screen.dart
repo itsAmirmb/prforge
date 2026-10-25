@@ -191,6 +191,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             value: settings.showSetClock,
             onChanged: ref.read(settingsRepositoryProvider).setShowSetClock,
           ),
+          const _SectionTitle('Progress'),
+          SwitchListTile(
+            secondary: const Icon(Icons.trending_flat),
+            title: const Text('Plateau reminder'),
+            subtitle: const Text('Note when the weight has not gone up'),
+            value: settings.plateauHint,
+            onChanged: ref.read(settingsRepositoryProvider).setPlateauHint,
+          ),
+          if (settings.plateauHint) ...[
+            _StepperTile(
+              icon: Icons.date_range_outlined,
+              title: 'Show after',
+              unit: 'weeks',
+              value: settings.plateauWeeks,
+              min: minPlateauWeeks,
+              max: maxPlateauWeeks,
+              onChanged: ref.read(settingsRepositoryProvider).setPlateauWeeks,
+            ),
+            _StepperTile(
+              icon: Icons.fitness_center,
+              title: 'At least',
+              unit: 'sessions',
+              value: settings.plateauSessions,
+              min: minPlateauSessions,
+              max: maxPlateauSessions,
+              onChanged:
+                  ref.read(settingsRepositoryProvider).setPlateauSessions,
+            ),
+          ],
           const _SectionTitle('Appearance'),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
@@ -288,6 +317,57 @@ class _RestTile extends ConsumerWidget {
             onPressed: seconds < maxDefaultRestSeconds
                 ? () => repo.setRestSeconds(seconds + _step)
                 : null,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A whole number with minus / plus buttons.
+class _StepperTile extends StatelessWidget {
+  const _StepperTile({
+    required this.icon,
+    required this.title,
+    required this.unit,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String title;
+  final String unit;
+  final int value;
+  final int min;
+  final int max;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: Text(unit),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'Less $unit',
+            icon: const Icon(Icons.remove_circle_outline),
+            onPressed: value > min ? () => onChanged(value - 1) : null,
+          ),
+          SizedBox(
+            width: 32,
+            child: Text('$value',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium),
+          ),
+          IconButton(
+            tooltip: 'More $unit',
+            icon: const Icon(Icons.add_circle_outline),
+            onPressed: value < max ? () => onChanged(value + 1) : null,
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../progress/domain/plateau.dart';
 import '../domain/session_blocks.dart';
 import 'entry_clock_chip.dart';
 import 'exercise_notes.dart';
@@ -46,7 +47,10 @@ class SupersetCard extends ConsumerWidget {
             ),
             const SizedBox(height: 2),
             for (final m in entry.members) ...[
-              LastSessionsHint(exercise: m.exercise, showName: true),
+              LastSessionsHint(
+                  exercise: m.exercise,
+                  showName: true,
+                  currentWeight: heaviestWeight(m.sets)),
               ExerciseNotes(
                   exercise: m.exercise,
                   prescriptionId: m.prescriptionId,

@@ -51,8 +51,6 @@ class _ProgressiveLoadingSheetState
       text: formatWeight(
           _editable.map((s) => s.weightKg).whereType<double>().lastOrNull));
   final _new = TextEditingController();
-  late final _reps =
-      TextEditingController(text: _editable.firstOrNull?.reps?.toString());
   int _atNew = 1;
 
   int get _total => _editable.length;
@@ -64,7 +62,6 @@ class _ProgressiveLoadingSheetState
   void dispose() {
     _previous.dispose();
     _new.dispose();
-    _reps.dispose();
     super.dispose();
   }
 
@@ -77,7 +74,6 @@ class _ProgressiveLoadingSheetState
           previousWeight: _w(_previous.text)!,
           newWeight: _w(_new.text)!,
           setsAtNewWeight: _atNew,
-          reps: int.tryParse(_reps.text.trim()),
         );
     if (mounted) Navigator.of(context).pop();
   }
@@ -195,14 +191,6 @@ class _ProgressiveLoadingSheetState
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _reps,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                decoration: const InputDecoration(
-                    labelText: 'Target reps for these sets'),
-              ),
               if (widget.block.sets.any((s) => s.isCompleted))
                 Padding(
                   padding: const EdgeInsets.only(top: 8),

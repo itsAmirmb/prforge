@@ -18,4 +18,27 @@ void main() {
     expect(s.showExerciseClock, isTrue);
     expect(s.showSetClock, isFalse);
   });
+
+  test('plateau reminder defaults and range checks', () {
+    final d = UserSettings.fromMap(const {});
+    expect(d.plateauHint, isTrue);
+    expect(d.plateauWeeks, 2);
+    expect(d.plateauSessions, 3);
+
+    final custom = UserSettings.fromMap({
+      SettingKeys.plateauHint: 'false',
+      SettingKeys.plateauWeeks: '4',
+      SettingKeys.plateauSessions: '5',
+    });
+    expect(custom.plateauHint, isFalse);
+    expect(custom.plateauWeeks, 4);
+    expect(custom.plateauSessions, 5);
+
+    final bad = UserSettings.fromMap({
+      SettingKeys.plateauWeeks: '99',
+      SettingKeys.plateauSessions: 'x',
+    });
+    expect(bad.plateauWeeks, 2);
+    expect(bad.plateauSessions, 3);
+  });
 }

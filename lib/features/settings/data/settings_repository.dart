@@ -37,6 +37,16 @@ class SettingsRepository {
   Future<void> setShowSetClock(bool on) =>
       _put(SettingKeys.showSetClock, on.toString());
 
+  Future<void> setPlateauHint(bool on) =>
+      _put(SettingKeys.plateauHint, on.toString());
+
+  Future<void> setPlateauWeeks(int weeks) => _put(SettingKeys.plateauWeeks,
+      weeks.clamp(minPlateauWeeks, maxPlateauWeeks).toString());
+
+  Future<void> setPlateauSessions(int sessions) => _put(
+      SettingKeys.plateauSessions,
+      sessions.clamp(minPlateauSessions, maxPlateauSessions).toString());
+
   Future<void> setThemeMode(ThemeMode mode) =>
       _put(SettingKeys.themeMode, mode.name);
 }

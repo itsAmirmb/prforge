@@ -201,8 +201,8 @@ class SessionRepository {
 
   /// Applies stepped loading to the unfinished sets of one block: the first
   /// [setsAtNewWeight] sets get [newWeight], the rest [previousWeight].
-  /// Completed sets are never touched. [reps], when given, is written to all
-  /// updated sets. Each set stays an independent SetLog.
+  /// Completed sets are never touched; reps are left as they are. Each set
+  /// stays an independent SetLog.
   Future<void> applyProgressiveLoading({
     required int sessionId,
     required int exerciseId,
@@ -210,7 +210,6 @@ class SessionRepository {
     required double previousWeight,
     required double newWeight,
     required int setsAtNewWeight,
-    int? reps,
   }) {
     return _db.transaction(() async {
       final l = _db.setLogs;
@@ -238,10 +237,7 @@ class SessionRepository {
       );
       for (var i = 0; i < editable.length; i++) {
         await (_db.update(l)..where((s) => s.id.equals(editable[i].id))).write(
-          SetLogsCompanion(
-            weightKg: Value(plan[i].weight),
-            reps: reps == null ? const Value.absent() : Value(reps),
-          ),
+          SetLogsCompanion(weightKg: Value(plan[i].weight)),
         );
       }
     });
