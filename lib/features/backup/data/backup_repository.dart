@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart';
+
 import '../../../core/database/app_database.dart';
 import '../domain/backup_format.dart';
 
@@ -30,6 +32,9 @@ class BackupRepository {
         workoutSessions: await _db.select(_db.workoutSessions).get(),
         setLogs: await _db.select(_db.setLogs).get(),
         miniSetLogs: await _db.select(_db.miniSetLogs).get(),
+        settingEntries: await (_db.select(_db.settingEntries)
+              ..orderBy([(e) => OrderingTerm.asc(e.key)]))
+            .get(),
       );
       return encodeBackup(
         contents,
@@ -54,6 +59,7 @@ class BackupRepository {
       await _db.delete(_db.workoutDays).go();
       await _db.delete(_db.programs).go();
       await _db.delete(_db.exercises).go();
+      if (c.settingEntries != null) await _db.delete(_db.settingEntries).go();
 
       // Parents first when inserting. Ids are kept, so every reference stays
       // valid.
@@ -66,6 +72,9 @@ class BackupRepository {
         b.insertAll(_db.workoutSessions, c.workoutSessions);
         b.insertAll(_db.setLogs, c.setLogs);
         b.insertAll(_db.miniSetLogs, c.miniSetLogs);
+        if (c.settingEntries != null) {
+          b.insertAll(_db.settingEntries, c.settingEntries!);
+        }
       });
     });
     return RestoreSummary(

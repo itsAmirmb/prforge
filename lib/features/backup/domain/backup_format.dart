@@ -29,6 +29,7 @@ class BackupContents {
     required this.workoutSessions,
     required this.setLogs,
     required this.miniSetLogs,
+    this.settingEntries,
   });
 
   final List<Exercise> exercises;
@@ -39,6 +40,10 @@ class BackupContents {
   final List<WorkoutSession> workoutSessions;
   final List<SetLog> setLogs;
   final List<MiniSetLog> miniSetLogs;
+
+  /// App settings. Null when the file has none (backups made before settings
+  /// were included): a restore then keeps the current settings.
+  final List<SettingEntry>? settingEntries;
 }
 
 String encodeBackup(
@@ -67,6 +72,9 @@ String encodeBackup(
           rows<WorkoutSession>(c.workoutSessions, (r) => r.toJson()),
       'setLogs': rows<SetLog>(c.setLogs, (r) => r.toJson()),
       'miniSetLogs': rows<MiniSetLog>(c.miniSetLogs, (r) => r.toJson()),
+      if (c.settingEntries != null)
+        'settingEntries':
+            rows<SettingEntry>(c.settingEntries!, (r) => r.toJson()),
     },
   });
 }
@@ -110,6 +118,9 @@ BackupContents decodeBackup(String text, {required int maxSchemaVersion}) {
     }
   }
 
+  // Optional: older backups do not contain settings.
+  final hasSettings = tables['settingEntries'] != null;
+
   return BackupContents(
     exercises: read('exercises', Exercise.fromJson),
     programs: read('programs', Program.fromJson),
@@ -120,5 +131,7 @@ BackupContents decodeBackup(String text, {required int maxSchemaVersion}) {
     workoutSessions: read('workoutSessions', WorkoutSession.fromJson),
     setLogs: read('setLogs', SetLog.fromJson),
     miniSetLogs: read('miniSetLogs', MiniSetLog.fromJson),
+    settingEntries:
+        hasSettings ? read('settingEntries', SettingEntry.fromJson) : null,
   );
 }

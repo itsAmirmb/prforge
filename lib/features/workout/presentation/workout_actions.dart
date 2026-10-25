@@ -38,6 +38,9 @@ class WorkoutActions {
     final current = ordered.firstWhere((s) => s.id == currentId);
     if (current.reps == null) return;
     await completeSet(current);
+    _ref
+        .read(feedbackServiceProvider)
+        .setDoneAudible(sound: _ref.read(userSettingsProvider).sound);
   }
 }
 

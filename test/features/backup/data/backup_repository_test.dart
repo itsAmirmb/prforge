@@ -145,6 +145,32 @@ void main() {
     expect(session.completedAt, isNotNull);
   });
 
+  test('settings are backed up and restored', () async {
+    await db.into(db.settingEntries).insert(
+        SettingEntriesCompanion.insert(key: 'restSeconds', value: '120'));
+    final json = await backup.exportJson();
+
+    await db.delete(db.settingEntries).go();
+    await db.into(db.settingEntries).insert(
+        SettingEntriesCompanion.insert(key: 'sound', value: 'false'));
+    await backup.restoreJson(json);
+
+    final rows = await db.select(db.settingEntries).get();
+    expect({for (final r in rows) r.key: r.value}, {'restSeconds': '120'});
+  });
+
+  test('an old backup without settings keeps the current settings', () async {
+    final root = jsonDecode(await backup.exportJson()) as Map<String, dynamic>;
+    (root['tables'] as Map<String, dynamic>).remove('settingEntries');
+    await db.into(db.settingEntries).insert(
+        SettingEntriesCompanion.insert(key: 'sound', value: 'false'));
+
+    await backup.restoreJson(jsonEncode(root));
+
+    final rows = await db.select(db.settingEntries).get();
+    expect({for (final r in rows) r.key: r.value}, {'sound': 'false'});
+  });
+
   group('invalid files leave the data untouched', () {
     late String before;
 

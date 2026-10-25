@@ -51,6 +51,11 @@ class FeedbackService {
     if (vibration) await _vibrate(tickPattern);
   }
 
+  /// A beep for a set completed without looking at the screen (headset).
+  Future<void> setDoneAudible({required bool sound}) async {
+    if (sound) await _beep();
+  }
+
   /// The rest is over: double buzz and beep, as enabled.
   Future<void> restOver({required bool sound, required bool vibration}) async {
     if (vibration) await _vibrate(restOverPattern);

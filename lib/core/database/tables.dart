@@ -117,7 +117,7 @@ class MiniSetLogs extends Table {
 }
 
 /// User settings as key/value text rows (see UserSettings for the keys).
-/// Kept out of backups on purpose: they describe this device, not the data.
+/// Included in backups (restoring an old backup without them keeps these).
 class SettingEntries extends Table {
   TextColumn get key => text()();
   TextColumn get value => text()();
