@@ -56,6 +56,9 @@ sealed class SessionEntry {
 
   /// All exercise blocks inside this entry.
   List<ExerciseBlock> get blocks;
+
+  /// Identifies the entry (see [entryToken]).
+  String get token;
 }
 
 class SingleEntry extends SessionEntry {
@@ -65,6 +68,9 @@ class SingleEntry extends SessionEntry {
 
   @override
   List<ExerciseBlock> get blocks => [block];
+
+  @override
+  String get token => 'p:${block.prescriptionId ?? -block.exercise.id}';
 }
 
 /// Sets that share a supersetKey: one block per member exercise, aligned by
@@ -77,6 +83,9 @@ class SupersetEntry extends SessionEntry {
 
   @override
   List<ExerciseBlock> get blocks => members;
+
+  @override
+  String get token => 's:$key';
 
   static int roundOf(SetLog set) => set.roundIndex ?? set.setIndex;
 
@@ -98,24 +107,48 @@ class SupersetEntry extends SessionEntry {
   }
 }
 
-/// Groups session sets into screen entries in first-seen order. Sets with a
-/// supersetKey collapse into one [SupersetEntry]; everything else becomes a
-/// [SingleEntry] per prescription (see [groupIntoBlocks]).
+/// Key of the screen entry a set belongs to: its superset, else its
+/// prescription (or, for an exercise added during the workout, the exercise).
+String entryToken(SetLog log) {
+  final superset = log.supersetKey;
+  return superset != null
+      ? 's:$superset'
+      : 'p:${log.prescriptionId ?? -log.exerciseId}';
+}
+
+/// Entry tokens in screen order. [sets] must be sorted by id. Entries with a
+/// saved position come first in that order, the others follow in the order
+/// they were created.
+List<String> orderedTokens(Iterable<SetLog> sets) {
+  final first = <String, int>{};
+  final position = <String, int>{};
+  for (final s in sets) {
+    final token = entryToken(s);
+    first.putIfAbsent(token, () => first.length);
+    final p = s.entryOrder;
+    final known = position[token];
+    if (p != null && (known == null || p < known)) position[token] = p;
+  }
+  const unplaced = 1 << 30;
+  return first.keys.toList()
+    ..sort((a, b) {
+      final byPosition =
+          (position[a] ?? unplaced).compareTo(position[b] ?? unplaced);
+      return byPosition != 0 ? byPosition : first[a]!.compareTo(first[b]!);
+    });
+}
+
+/// Groups session sets into screen entries in screen order (see
+/// [orderedTokens]). Sets with a supersetKey collapse into one
+/// [SupersetEntry]; everything else becomes a [SingleEntry] per prescription
+/// (see [groupIntoBlocks]).
 List<SessionEntry> groupIntoEntries(List<SetLogWithExercise> rows) {
-  final order = <String>[];
   final groups = <String, List<SetLogWithExercise>>{};
   for (final row in rows) {
-    final superset = row.log.supersetKey;
-    final token = superset != null
-        ? 's:$superset'
-        : 'p:${row.log.prescriptionId ?? -row.log.exerciseId}';
-    groups.putIfAbsent(token, () {
-      order.add(token);
-      return <SetLogWithExercise>[];
-    }).add(row);
+    groups.putIfAbsent(entryToken(row.log), () => <SetLogWithExercise>[]).add(row);
   }
   return [
-    for (final token in order)
+    for (final token in orderedTokens([for (final r in rows) r.log]))
       if (token.startsWith('s:'))
         SupersetEntry(
           key: token.substring(2),

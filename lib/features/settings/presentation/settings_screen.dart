@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -10,6 +11,7 @@ import '../../backup/domain/backup_format.dart';
 import '../../backup/presentation/backup_providers.dart';
 import '../../programs/data/program_importer.dart';
 import '../../programs/domain/program_template.dart';
+import '../../programs/domain/program_template_guide.dart';
 import '../../../app/providers.dart';
 import '../../../core/feedback/feedback_service.dart';
 import '../domain/user_settings.dart';
@@ -106,6 +108,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _copyFormat() async {
+    await Clipboard.setData(const ClipboardData(text: programTemplateGuide));
+    _say('File format and sample copied.');
   }
 
   Future<void> _importProgram() async {
@@ -241,6 +248,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             subtitle: const Text('Add a program from a JSON file (keeps your data)'),
             enabled: !_busy,
             onTap: _importProgram,
+          ),
+          ListTile(
+            leading: const Icon(Icons.content_copy),
+            title: const Text('Copy file format'),
+            subtitle: const Text(
+                'Copies the JSON structure and a sample, to prepare a program file'),
+            onTap: _copyFormat,
           ),
           const _SectionTitle('Backup'),
           ListTile(

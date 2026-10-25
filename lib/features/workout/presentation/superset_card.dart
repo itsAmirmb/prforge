@@ -14,10 +14,14 @@ import 'workout_providers.dart';
 /// A superset in a session: one card, sets grouped by round, every member's
 /// set of the round listed in the planned order.
 class SupersetCard extends ConsumerWidget {
-  const SupersetCard({super.key, required this.sessionId, required this.entry});
+  const SupersetCard(
+      {super.key, required this.sessionId, required this.entry, this.dragIndex});
 
   final int sessionId;
   final SupersetEntry entry;
+
+  /// Position in the reorderable workout list (shows the drag handle).
+  final int? dragIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,6 +47,14 @@ class SupersetCard extends ConsumerWidget {
                   padding: const EdgeInsets.only(left: 8, right: 8),
                   child: EntryClockChip(sessionId: sessionId, entry: entry),
                 ),
+                if (dragIndex != null)
+                  ReorderableDragStartListener(
+                    index: dragIndex!,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Icon(Icons.drag_handle),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 2),

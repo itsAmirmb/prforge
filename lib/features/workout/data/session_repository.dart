@@ -186,8 +186,72 @@ class SessionRepository {
             reps: Value(last?.reps),
             supersetKey: Value(last?.supersetKey),
             roundIndex: Value(lastRound == null ? null : lastRound + 1),
+            entryOrder: Value(last?.entryOrder),
           ),
         );
+  }
+
+  /// Sets of a session in creation order.
+  Future<List<SetLog>> _setsOf(int sessionId) {
+    return (_db.select(_db.setLogs)
+          ..where((s) => s.sessionId.equals(sessionId))
+          ..orderBy([(s) => OrderingTerm.asc(s.id)]))
+        .get();
+  }
+
+  /// Saves the screen order of the entries (see [entryToken]); every set of
+  /// an entry gets the entry's position.
+  Future<void> _saveOrder(List<SetLog> sets, List<String> tokens) async {
+    for (final s in sets) {
+      final position = tokens.indexOf(entryToken(s));
+      if (position < 0 || s.entryOrder == position) continue;
+      await (_db.update(_db.setLogs)..where((l) => l.id.equals(s.id)))
+          .write(SetLogsCompanion(entryOrder: Value(position)));
+    }
+  }
+
+  /// Puts the entries of a session in the given order.
+  Future<void> reorderEntries(int sessionId, List<String> tokens) {
+    return _db.transaction(() async {
+      await _saveOrder(await _setsOf(sessionId), tokens);
+    });
+  }
+
+  /// Number of sets for an exercise added during a workout when it has no
+  /// history, and their default reps. Weight stays empty.
+  static const newExerciseSets = 3;
+  static const newExerciseReps = 10;
+
+  /// Adds an exercise at the end of a running workout. Sets, weights and reps
+  /// copy its last finished performance, else [newExerciseSets] sets of
+  /// [newExerciseReps]. If it was already added this way, one more set is
+  /// added to it instead.
+  Future<void> addExercise(int sessionId, int exerciseId) {
+    return _db.transaction(() async {
+      final existing = await _setsOf(sessionId);
+      final tokens = orderedTokens(existing);
+      final token = 'p:${-exerciseId}';
+      if (tokens.contains(token)) {
+        await addSet(sessionId, exerciseId, null);
+        return;
+      }
+      // Make every position explicit, then put the new exercise last.
+      await _saveOrder(existing, tokens);
+      final last = await lastPerformance(exerciseId);
+      final count = last.isEmpty ? newExerciseSets : last.length;
+      for (var i = 0; i < count; i++) {
+        await _db.into(_db.setLogs).insert(
+              SetLogsCompanion.insert(
+                sessionId: sessionId,
+                exerciseId: exerciseId,
+                setIndex: i,
+                weightKg: Value(last.isEmpty ? null : last[i].weightKg),
+                reps: Value(last.isEmpty ? newExerciseReps : last[i].reps),
+                entryOrder: Value(tokens.length),
+              ),
+            );
+      }
+    });
   }
 
   /// Adds one more set to every member of a superset (a new round).

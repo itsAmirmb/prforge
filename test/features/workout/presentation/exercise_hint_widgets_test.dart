@@ -35,6 +35,7 @@ LoggedSet logged(int session, double weight, int reps) => LoggedSet(
           supersetKey: null,
           roundIndex: null,
           mainSetId: null,
+          entryOrder: null,
           note: null),
     );
 

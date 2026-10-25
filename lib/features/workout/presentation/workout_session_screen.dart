@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/session_blocks.dart';
 import 'exercise_block_card.dart';
+import 'exercise_picker_sheet.dart';
 import 'keep_screen_on.dart';
 import 'rest_timer_bar.dart';
 import 'rest_timer_state.dart';
@@ -66,6 +67,14 @@ class WorkoutSessionScreen extends ConsumerWidget {
     if (context.mounted) Navigator.of(context).pop();
   }
 
+  Future<void> _addExercise(BuildContext context, WidgetRef ref) async {
+    final exercise = await showExercisePicker(context);
+    if (exercise == null) return;
+    await ref
+        .read(sessionRepositoryProvider)
+        .addExercise(sessionId, exercise.id);
+  }
+
   Future<void> _discard(BuildContext context, WidgetRef ref) async {
     final ok = await _confirm(
       context,
@@ -126,36 +135,58 @@ class WorkoutSessionScreen extends ConsumerWidget {
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (list) => list.isEmpty
-            ? const Center(child: Text('This workout has no sets.'))
-            : ListView(
-                padding: const EdgeInsets.only(bottom: 24),
-                children: [
-                  for (final entry in list)
-                    switch (entry) {
-                      SingleEntry(:final block) => ExerciseBlockCard(
-                          key: ValueKey(
-                              'b${block.prescriptionId ?? -block.exercise.id}'),
-                          sessionId: sessionId,
-                          block: block,
-                        ),
-                      SupersetEntry e => SupersetCard(
-                          key: ValueKey('s${e.key}'),
-                          sessionId: sessionId,
-                          entry: e,
-                        ),
-                    },
-                  if (sets.isNotEmpty && done == sets.length)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                      child: FilledButton.icon(
-                        icon: const Icon(Icons.flag),
-                        label: const Text('All sets done · Finish workout'),
-                        onPressed: () => _finish(context, ref, list),
-                      ),
-                    ),
-                ],
+        data: (list) => ReorderableListView.builder(
+          padding: const EdgeInsets.only(bottom: 24),
+          buildDefaultDragHandles: false,
+          itemCount: list.length,
+          onReorderItem: (oldIndex, newIndex) {
+            final tokens = [for (final e in list) e.token];
+            tokens.insert(newIndex, tokens.removeAt(oldIndex));
+            ref
+                .read(sessionRepositoryProvider)
+                .reorderEntries(sessionId, tokens);
+          },
+          itemBuilder: (context, i) => switch (list[i]) {
+            SingleEntry(:final block) => ExerciseBlockCard(
+                key: ValueKey(list[i].token),
+                sessionId: sessionId,
+                block: block,
+                dragIndex: i,
               ),
+            SupersetEntry e => SupersetCard(
+                key: ValueKey(list[i].token),
+                sessionId: sessionId,
+                entry: e,
+                dragIndex: i,
+              ),
+          },
+          footer: Column(
+            children: [
+              if (list.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('This workout has no sets.'),
+                ),
+              if (sets.isNotEmpty && done == sets.length)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: FilledButton.icon(
+                    icon: const Icon(Icons.flag),
+                    label: const Text('All sets done · Finish workout'),
+                    onPressed: () => _finish(context, ref, list),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add exercise'),
+                  onPressed: () => _addExercise(context, ref),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     ));
   }

@@ -15,6 +15,7 @@ SetLog set(int id, {bool done = false}) => SetLog(
     supersetKey: null,
     roundIndex: null,
     mainSetId: null,
+    entryOrder: null,
     note: null);
 
 void main() {

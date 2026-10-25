@@ -29,6 +29,7 @@ SetLog set(int id, int exerciseId, int? doneAtMin, {String? key}) => SetLog(
     supersetKey: key,
     roundIndex: null,
     mainSetId: null,
+    entryOrder: null,
     note: null);
 
 SingleEntry single(int exerciseId, List<SetLog> sets) => SingleEntry(
@@ -90,6 +91,7 @@ void main() {
         supersetKey: null,
         roundIndex: null,
         mainSetId: null,
+        entryOrder: null,
         note: null);
     expect(entryTiming(single(1, [old]), [old], t0), isNull);
   });

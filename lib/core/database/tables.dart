@@ -101,6 +101,11 @@ class SetLogs extends Table {
   TextColumn get supersetKey => text().nullable()();
   IntColumn get roundIndex => integer().nullable()();
 
+  /// Position of this set's exercise (or superset) on the workout screen.
+  /// Null until an exercise is added or moved in the workout; then the
+  /// creation order is used.
+  IntColumn get entryOrder => integer().nullable()();
+
   /// Groups mini-sets of one rest-pause main set (optional for other kinds).
   IntColumn get mainSetId => integer().nullable()();
   TextColumn get note => text().nullable()();

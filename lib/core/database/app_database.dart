@@ -23,7 +23,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? driftDatabase(name: 'prforge'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -37,6 +37,9 @@ class AppDatabase extends _$AppDatabase {
           }
           if (from < 4) {
             await m.createTable(settingEntries);
+          }
+          if (from < 5) {
+            await m.addColumn(setLogs, setLogs.entryOrder);
           }
         },
         beforeOpen: (details) async {

@@ -24,10 +24,14 @@ class ExerciseBlockCard extends ConsumerWidget {
     super.key,
     required this.sessionId,
     required this.block,
+    this.dragIndex,
   });
 
   final int sessionId;
   final ExerciseBlock block;
+
+  /// Position in the reorderable workout list (shows the drag handle).
+  final int? dragIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,6 +61,14 @@ class ExerciseBlockCard extends ConsumerWidget {
                   child: EntryClockChip(
                       sessionId: sessionId, entry: SingleEntry(block)),
                 ),
+                if (dragIndex != null)
+                  ReorderableDragStartListener(
+                    index: dragIndex!,
+                    child: const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Icon(Icons.drag_handle),
+                    ),
+                  ),
               ],
             ),
             LastSessionsHint(

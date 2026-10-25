@@ -29,6 +29,7 @@ SetLog set(int id, int exerciseId, int? doneAtMin) => SetLog(
     supersetKey: null,
     roundIndex: null,
     mainSetId: null,
+    entryOrder: null,
     note: null);
 
 SingleEntry single(int exerciseId, List<SetLog> sets) => SingleEntry(

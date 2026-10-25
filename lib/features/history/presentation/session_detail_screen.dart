@@ -5,6 +5,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/utils/date_format.dart';
 import '../../workout/domain/rest_pause.dart';
 import '../../workout/domain/session_blocks.dart';
+import '../../workout/presentation/exercise_history_sheet.dart';
 import '../../workout/presentation/workout_providers.dart';
 import '../data/history_repository.dart';
 import '../domain/entry_timing.dart';
@@ -105,6 +106,33 @@ class SessionDetailScreen extends ConsumerWidget {
   }
 }
 
+/// Exercise name; tap opens its history and progress.
+class _ExerciseTitle extends StatelessWidget {
+  const _ExerciseTitle({required this.exercise, required this.text});
+
+  final Exercise exercise;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: () => showExerciseHistorySheet(context, exercise),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            Flexible(child: Text(text, style: theme.textTheme.titleMedium)),
+            const SizedBox(width: 6),
+            Icon(Icons.info_outline,
+                size: 16, color: theme.colorScheme.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Timing line: "09:12 – 09:21 · 9m".
 class _TimingLine extends StatelessWidget {
   const _TimingLine(this.timing);
@@ -170,9 +198,11 @@ class _BlockCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              kind == null ? block.exercise.name : '${block.exercise.name} · $kind',
-              style: Theme.of(context).textTheme.titleMedium,
+            _ExerciseTitle(
+              exercise: block.exercise,
+              text: kind == null
+                  ? block.exercise.name
+                  : '${block.exercise.name} · $kind',
             ),
             _TimingLine(timing),
             const SizedBox(height: 6),
@@ -204,10 +234,9 @@ class _SupersetCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Superset · ${entry.members.map((m) => m.exercise.name).join(' + ')}',
-              style: theme.textTheme.titleMedium,
-            ),
+            Text('Superset', style: theme.textTheme.titleMedium),
+            for (final m in entry.members)
+              _ExerciseTitle(exercise: m.exercise, text: m.exercise.name),
             _TimingLine(timing),
             for (var r = 0; r < entry.rounds.length; r++) ...[
               const SizedBox(height: 8),
