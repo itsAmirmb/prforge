@@ -7,47 +7,43 @@ export 'tables.dart' show SetKind, SessionStatus;
 
 part 'app_database.g.dart';
 
-@DriftDatabase(
-  tables: [
-    Exercises,
-    Programs,
-    WorkoutDays,
-    SupersetGroups,
-    ExercisePrescriptions,
-    WorkoutSessions,
-    SetLogs,
-    MiniSetLogs,
-    SettingEntries,
-  ],
-)
+@DriftDatabase(tables: [
+  Exercises,
+  Programs,
+  WorkoutDays,
+  SupersetGroups,
+  ExercisePrescriptions,
+  WorkoutSessions,
+  SetLogs,
+  MiniSetLogs,
+  SettingEntries,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
-    : super(executor ?? driftDatabase(name: 'prforge'));
+      : super(executor ?? driftDatabase(name: 'prforge'));
 
   @override
   int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-    onUpgrade: (m, from, to) async {
-      if (from < 2) {
-        await m.addColumn(
-          exercisePrescriptions,
-          exercisePrescriptions.repScheme,
-        );
-      }
-      if (from < 3) {
-        await m.addColumn(setLogs, setLogs.completedAt);
-      }
-      if (from < 4) {
-        await m.createTable(settingEntries);
-      }
-      if (from < 5) {
-        await m.addColumn(setLogs, setLogs.entryOrder);
-      }
-    },
-    beforeOpen: (details) async {
-      await customStatement('PRAGMA foreign_keys = ON');
-    },
-  );
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(
+                exercisePrescriptions, exercisePrescriptions.repScheme);
+          }
+          if (from < 3) {
+            await m.addColumn(setLogs, setLogs.completedAt);
+          }
+          if (from < 4) {
+            await m.createTable(settingEntries);
+          }
+          if (from < 5) {
+            await m.addColumn(setLogs, setLogs.entryOrder);
+          }
+        },
+        beforeOpen: (details) async {
+          await customStatement('PRAGMA foreign_keys = ON');
+        },
+      );
 }

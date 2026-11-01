@@ -27,12 +27,10 @@ class _SupersetFormSheetState extends ConsumerState<SupersetFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.group.name);
   late final _rounds = TextEditingController(text: '${widget.group.rounds}');
-  late final _between = TextEditingController(
-    text: widget.group.restBetweenSeconds?.toString(),
-  );
+  late final _between =
+      TextEditingController(text: widget.group.restBetweenSeconds?.toString());
   late final _afterRound = TextEditingController(
-    text: widget.group.restAfterRoundSeconds?.toString(),
-  );
+      text: widget.group.restAfterRoundSeconds?.toString());
 
   @override
   void dispose() {
@@ -51,9 +49,7 @@ class _SupersetFormSheetState extends ConsumerState<SupersetFormSheet> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    await ref
-        .read(supersetRepositoryProvider)
-        .updateGroup(
+    await ref.read(supersetRepositoryProvider).updateGroup(
           widget.group.id,
           name: _name.text,
           rounds: int.parse(_rounds.text.trim()),
@@ -67,11 +63,7 @@ class _SupersetFormSheetState extends ConsumerState<SupersetFormSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        16,
-        0,
-        16,
-        16 + MediaQuery.of(context).viewInsets.bottom,
-      ),
+          16, 0, 16, 16 + MediaQuery.of(context).viewInsets.bottom),
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -87,8 +79,7 @@ class _SupersetFormSheetState extends ConsumerState<SupersetFormSheet> {
                 controller: _rounds,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'Rounds (sets of every exercise)',
-                ),
+                    labelText: 'Rounds (sets of every exercise)'),
                 validator: (v) => _int(v, min: 1, required: true),
               ),
               Row(
@@ -98,8 +89,7 @@ class _SupersetFormSheetState extends ConsumerState<SupersetFormSheet> {
                       controller: _between,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: 'Rest between exercises (sec)',
-                      ),
+                          labelText: 'Rest between exercises (sec)'),
                       validator: (v) => _int(v, min: 0),
                     ),
                   ),
@@ -109,8 +99,7 @@ class _SupersetFormSheetState extends ConsumerState<SupersetFormSheet> {
                       controller: _afterRound,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                        labelText: 'Rest after round (sec)',
-                      ),
+                          labelText: 'Rest after round (sec)'),
                       validator: (v) => _int(v, min: 0),
                     ),
                   ),
@@ -119,10 +108,8 @@ class _SupersetFormSheetState extends ConsumerState<SupersetFormSheet> {
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton(
-                  onPressed: _save,
-                  child: const Text('Save'),
-                ),
+                child:
+                    FilledButton(onPressed: _save, child: const Text('Save')),
               ),
             ],
           ),

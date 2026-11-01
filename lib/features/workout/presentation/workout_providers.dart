@@ -16,45 +16,42 @@ final activeSessionProvider = StreamProvider<WorkoutSession?>(
   (ref) => ref.watch(sessionRepositoryProvider).watchActiveSession(),
 );
 
-final sessionEntriesProvider = StreamProvider.autoDispose
-    .family<List<SessionEntry>, int>(
-      (ref, sessionId) => ref
-          .watch(sessionRepositoryProvider)
-          .watchSessionSets(sessionId)
-          .map(groupIntoEntries),
-    );
+final sessionEntriesProvider =
+    StreamProvider.autoDispose.family<List<SessionEntry>, int>(
+  (ref, sessionId) => ref
+      .watch(sessionRepositoryProvider)
+      .watchSessionSets(sessionId)
+      .map(groupIntoEntries),
+);
 
 /// Last completed performance of an exercise (for the "Last:" line).
-final lastPerformanceProvider = FutureProvider.autoDispose
-    .family<List<SetLog>, int>(
-      (ref, exerciseId) =>
-          ref.watch(sessionRepositoryProvider).lastPerformance(exerciseId),
-    );
+final lastPerformanceProvider =
+    FutureProvider.autoDispose.family<List<SetLog>, int>(
+  (ref, exerciseId) =>
+      ref.watch(sessionRepositoryProvider).lastPerformance(exerciseId),
+);
 
 final miniSetRepositoryProvider = Provider<MiniSetRepository>(
   (ref) => MiniSetRepository(ref.watch(databaseProvider)),
 );
 
 /// Mini-sets of a session grouped by their main set (SetLog id).
-final miniSetsBySetProvider = StreamProvider.autoDispose
-    .family<Map<int, List<MiniSetLog>>, int>(
-      (ref, sessionId) => ref
-          .watch(miniSetRepositoryProvider)
-          .watchForSession(sessionId)
-          .map((all) {
-            final bySet = <int, List<MiniSetLog>>{};
-            for (final m in all) {
-              bySet.putIfAbsent(m.setLogId, () => <MiniSetLog>[]).add(m);
-            }
-            return bySet;
-          }),
-    );
+final miniSetsBySetProvider =
+    StreamProvider.autoDispose.family<Map<int, List<MiniSetLog>>, int>(
+  (ref, sessionId) =>
+      ref.watch(miniSetRepositoryProvider).watchForSession(sessionId).map((all) {
+    final bySet = <int, List<MiniSetLog>>{};
+    for (final m in all) {
+      bySet.putIfAbsent(m.setLogId, () => <MiniSetLog>[]).add(m);
+    }
+    return bySet;
+  }),
+);
 
 /// The set to do next in a session (highlighted and scrolled to).
 final currentSetIdProvider = Provider.autoDispose.family<int?, int>(
   (ref, sessionId) => currentSetIdOf(
     performingOrder(
-      ref.watch(sessionEntriesProvider(sessionId)).value ?? const [],
-    ),
+        ref.watch(sessionEntriesProvider(sessionId)).value ?? const []),
   ),
 );

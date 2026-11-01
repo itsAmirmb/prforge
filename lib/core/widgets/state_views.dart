@@ -26,20 +26,16 @@ class EmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: ExcludeSemantics(
-                child: Icon(
-                  icon,
-                  size: 32,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+                child: Icon(icon,
+                    size: 32, color: theme.colorScheme.onSurfaceVariant),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: theme.textTheme.bodyLarge
+                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ),
@@ -64,18 +60,12 @@ class ErrorState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ExcludeSemantics(
-              child: Icon(
-                Icons.error_outline,
-                size: 40,
-                color: theme.colorScheme.error,
-              ),
+              child: Icon(Icons.error_outline,
+                  size: 40, color: theme.colorScheme.error),
             ),
             const SizedBox(height: AppSpacing.md),
-            Text(
-              'Error: $error',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium,
-            ),
+            Text('Error: $error',
+                textAlign: TextAlign.center, style: theme.textTheme.bodyMedium),
           ],
         ),
       ),
@@ -111,11 +101,8 @@ class IconBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: ExcludeSemantics(
-        child: Icon(
-          icon,
-          size: 22,
-          color: onColor ?? scheme.onPrimaryContainer,
-        ),
+        child: Icon(icon,
+            size: 22, color: onColor ?? scheme.onPrimaryContainer),
       ),
     );
   }
@@ -141,11 +128,8 @@ class StatPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           ExcludeSemantics(
-            child: Icon(
-              icon,
-              size: 16,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+            child: Icon(icon,
+                size: 16, color: theme.colorScheme.onSurfaceVariant),
           ),
           const SizedBox(width: 6),
           Text(text, style: theme.textTheme.labelMedium),
@@ -165,12 +149,8 @@ class SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg + 4,
-        AppSpacing.xl,
-        AppSpacing.lg,
-        AppSpacing.sm,
-      ),
+      padding: const EdgeInsets.fromLTRB(AppSpacing.lg + 4, AppSpacing.xl,
+          AppSpacing.lg, AppSpacing.sm),
       child: Semantics(
         header: true,
         child: Text(

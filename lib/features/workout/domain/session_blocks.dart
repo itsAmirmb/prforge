@@ -32,20 +32,17 @@ List<ExerciseBlock> groupIntoBlocks(List<SetLogWithExercise> rows) {
   final groups = <int, List<SetLogWithExercise>>{};
   for (final row in rows) {
     final key = row.log.prescriptionId ?? -row.log.exerciseId;
-    groups
-        .putIfAbsent(key, () {
-          order.add(key);
-          return <SetLogWithExercise>[];
-        })
-        .add(row);
+    groups.putIfAbsent(key, () {
+      order.add(key);
+      return <SetLogWithExercise>[];
+    }).add(row);
   }
   return [
     for (final key in order)
       ExerciseBlock(
         exercise: groups[key]!.first.exercise,
         prescriptionId: groups[key]!.first.log.prescriptionId,
-        sets: [for (final r in groups[key]!) r.log]
-          ..sort((a, b) {
+        sets: [for (final r in groups[key]!) r.log]..sort((a, b) {
             final byIndex = a.setIndex.compareTo(b.setIndex);
             return byIndex != 0 ? byIndex : a.id.compareTo(b.id);
           }),
@@ -133,12 +130,12 @@ List<String> orderedTokens(Iterable<SetLog> sets) {
     if (p != null && (known == null || p < known)) position[token] = p;
   }
   const unplaced = 1 << 30;
-  return first.keys.toList()..sort((a, b) {
-    final byPosition = (position[a] ?? unplaced).compareTo(
-      position[b] ?? unplaced,
-    );
-    return byPosition != 0 ? byPosition : first[a]!.compareTo(first[b]!);
-  });
+  return first.keys.toList()
+    ..sort((a, b) {
+      final byPosition =
+          (position[a] ?? unplaced).compareTo(position[b] ?? unplaced);
+      return byPosition != 0 ? byPosition : first[a]!.compareTo(first[b]!);
+    });
 }
 
 /// Groups session sets into screen entries in screen order (see
@@ -148,9 +145,7 @@ List<String> orderedTokens(Iterable<SetLog> sets) {
 List<SessionEntry> groupIntoEntries(List<SetLogWithExercise> rows) {
   final groups = <String, List<SetLogWithExercise>>{};
   for (final row in rows) {
-    groups
-        .putIfAbsent(entryToken(row.log), () => <SetLogWithExercise>[])
-        .add(row);
+    groups.putIfAbsent(entryToken(row.log), () => <SetLogWithExercise>[]).add(row);
   }
   return [
     for (final token in orderedTokens([for (final r in rows) r.log]))

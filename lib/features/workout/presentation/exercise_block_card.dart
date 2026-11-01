@@ -36,9 +36,7 @@ class ExerciseBlockCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final last = ref.watch(lastPerformanceProvider(block.exercise.id)).value;
-    final kind = block.sets.isEmpty
-        ? null
-        : _kindLabels[block.sets.first.setKind];
+    final kind = block.sets.isEmpty ? null : _kindLabels[block.sets.first.setKind];
     final theme = Theme.of(context);
 
     return Card(
@@ -62,9 +60,7 @@ class ExerciseBlockCard extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: 8, right: 8),
                   child: EntryClockChip(
-                    sessionId: sessionId,
-                    entry: SingleEntry(block),
-                  ),
+                      sessionId: sessionId, entry: SingleEntry(block)),
                 ),
                 if (dragIndex != null)
                   ReorderableDragStartListener(
@@ -77,13 +73,10 @@ class ExerciseBlockCard extends ConsumerWidget {
               ],
             ),
             LastSessionsHint(
-              exercise: block.exercise,
-              currentWeight: heaviestWeight(block.sets),
-            ),
+                exercise: block.exercise,
+                currentWeight: heaviestWeight(block.sets)),
             ExerciseNotes(
-              exercise: block.exercise,
-              prescriptionId: block.prescriptionId,
-            ),
+                exercise: block.exercise, prescriptionId: block.prescriptionId),
             const SizedBox(height: 4),
             for (var i = 0; i < block.sets.length; i++)
               SetWithMinis(
@@ -97,13 +90,8 @@ class ExerciseBlockCard extends ConsumerWidget {
                 TextButton.icon(
                   icon: const Icon(Icons.add),
                   label: const Text('Add set'),
-                  onPressed: () => ref
-                      .read(sessionRepositoryProvider)
-                      .addSet(
-                        sessionId,
-                        block.exercise.id,
-                        block.prescriptionId,
-                      ),
+                  onPressed: () => ref.read(sessionRepositoryProvider).addSet(
+                      sessionId, block.exercise.id, block.prescriptionId),
                 ),
                 TextButton.icon(
                   icon: const Icon(Icons.trending_up),
@@ -112,13 +100,8 @@ class ExerciseBlockCard extends ConsumerWidget {
                     if (block.sets.every((s) => s.isCompleted)) {
                       ScaffoldMessenger.of(context)
                         ..clearSnackBars()
-                        ..showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'All sets of this exercise are done.',
-                            ),
-                          ),
-                        );
+                        ..showSnackBar(const SnackBar(
+                            content: Text('All sets of this exercise are done.')));
                       return;
                     }
                     await showProgressiveLoadingSheet(

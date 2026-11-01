@@ -31,8 +31,7 @@ const programTemplateSample = '''{
 
 /// Text copied from Settings > Import program: the file format and a sample,
 /// written so it can also be pasted into an AI assistant to get a new program.
-const programTemplateGuide =
-    '''PRForge program file (JSON)
+const programTemplateGuide = '''PRForge program file (JSON)
 
 Write ONE valid JSON object and nothing else (no comments, no trailing commas). Save it as a .json file and import it in PRForge: Settings > Import program.
 

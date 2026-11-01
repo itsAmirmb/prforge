@@ -9,9 +9,8 @@ final exerciseRepositoryProvider = Provider<ExerciseRepository>(
 );
 
 /// Family key: true = archived exercises, false = active ones.
-final exerciseListProvider = StreamProvider.autoDispose
-    .family<List<Exercise>, bool>(
-      (ref, archived) => ref
-          .watch(exerciseRepositoryProvider)
-          .watchExercises(archived: archived),
-    );
+final exerciseListProvider =
+    StreamProvider.autoDispose.family<List<Exercise>, bool>(
+  (ref, archived) =>
+      ref.watch(exerciseRepositoryProvider).watchExercises(archived: archived),
+);

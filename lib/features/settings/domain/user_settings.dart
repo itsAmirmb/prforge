@@ -78,10 +78,10 @@ class UserSettings {
 
   factory UserSettings.fromMap(Map<String, String> map) {
     bool flag(String key, bool fallback) => switch (map[key]) {
-      'true' => true,
-      'false' => false,
-      _ => fallback,
-    };
+          'true' => true,
+          'false' => false,
+          _ => fallback,
+        };
     int inRange(String key, int min, int max, int fallback) {
       final v = int.tryParse(map[key] ?? '');
       return v == null || v < min || v > max ? fallback : v;
@@ -95,8 +95,7 @@ class UserSettings {
       sound: flag(SettingKeys.sound, true),
       vibration: flag(SettingKeys.vibration, true),
       keepScreenOn: flag(SettingKeys.keepScreenOn, true),
-      themeMode:
-          ThemeMode.values.asNameMap()[map[SettingKeys.themeMode]] ??
+      themeMode: ThemeMode.values.asNameMap()[map[SettingKeys.themeMode]] ??
           ThemeMode.system,
       showWorkoutClock: flag(SettingKeys.showWorkoutClock, true),
       showExerciseClock: flag(SettingKeys.showExerciseClock, true),
@@ -105,18 +104,10 @@ class UserSettings {
       speakReps: flag(SettingKeys.speakReps, true),
       speakWeight: flag(SettingKeys.speakWeight, false),
       speakExerciseName: flag(SettingKeys.speakExerciseName, true),
-      plateauWeeks: inRange(
-        SettingKeys.plateauWeeks,
-        minPlateauWeeks,
-        maxPlateauWeeks,
-        2,
-      ),
-      plateauSessions: inRange(
-        SettingKeys.plateauSessions,
-        minPlateauSessions,
-        maxPlateauSessions,
-        3,
-      ),
+      plateauWeeks: inRange(SettingKeys.plateauWeeks, minPlateauWeeks,
+          maxPlateauWeeks, 2),
+      plateauSessions: inRange(SettingKeys.plateauSessions,
+          minPlateauSessions, maxPlateauSessions, 3),
     );
   }
 }

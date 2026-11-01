@@ -8,8 +8,7 @@ class RestTimerState {
   /// Length of the whole rest (for the progress bar).
   final int totalSeconds;
 
-  Duration remaining([DateTime? now]) =>
-      endsAt.difference(now ?? DateTime.now());
+  Duration remaining([DateTime? now]) => endsAt.difference(now ?? DateTime.now());
 }
 
 /// The running rest timer, or null. It is based on an end time, so it stays
@@ -42,6 +41,5 @@ class RestTimerNotifier extends Notifier<RestTimerState?> {
   void stop() => state = null;
 }
 
-final restTimerProvider = NotifierProvider<RestTimerNotifier, RestTimerState?>(
-  RestTimerNotifier.new,
-);
+final restTimerProvider =
+    NotifierProvider<RestTimerNotifier, RestTimerState?>(RestTimerNotifier.new);

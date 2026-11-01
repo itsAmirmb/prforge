@@ -52,9 +52,8 @@ String encodeBackup(
   required int schemaVersion,
 }) {
   List<Map<String, dynamic>> rows<T>(
-    List<T> list,
-    Map<String, dynamic> Function(T) toJson,
-  ) => [for (final r in list) toJson(r)];
+          List<T> list, Map<String, dynamic> Function(T) toJson) =>
+      [for (final r in list) toJson(r)];
 
   return const JsonEncoder.withIndent(' ').convert({
     'format': backupFormatName,
@@ -65,25 +64,17 @@ String encodeBackup(
       'exercises': rows<Exercise>(c.exercises, (r) => r.toJson()),
       'programs': rows<Program>(c.programs, (r) => r.toJson()),
       'workoutDays': rows<WorkoutDay>(c.workoutDays, (r) => r.toJson()),
-      'supersetGroups': rows<SupersetGroup>(
-        c.supersetGroups,
-        (r) => r.toJson(),
-      ),
+      'supersetGroups':
+          rows<SupersetGroup>(c.supersetGroups, (r) => r.toJson()),
       'exercisePrescriptions': rows<ExercisePrescription>(
-        c.exercisePrescriptions,
-        (r) => r.toJson(),
-      ),
-      'workoutSessions': rows<WorkoutSession>(
-        c.workoutSessions,
-        (r) => r.toJson(),
-      ),
+          c.exercisePrescriptions, (r) => r.toJson()),
+      'workoutSessions':
+          rows<WorkoutSession>(c.workoutSessions, (r) => r.toJson()),
       'setLogs': rows<SetLog>(c.setLogs, (r) => r.toJson()),
       'miniSetLogs': rows<MiniSetLog>(c.miniSetLogs, (r) => r.toJson()),
       if (c.settingEntries != null)
-        'settingEntries': rows<SettingEntry>(
-          c.settingEntries!,
-          (r) => r.toJson(),
-        ),
+        'settingEntries':
+            rows<SettingEntry>(c.settingEntries!, (r) => r.toJson()),
     },
   });
 }
@@ -103,14 +94,12 @@ BackupContents decodeBackup(String text, {required int maxSchemaVersion}) {
   final version = root['version'];
   if (version is! int || version > backupFormatVersion) {
     throw const BackupFormatException(
-      'This backup was made by a newer version of the app.',
-    );
+        'This backup was made by a newer version of the app.');
   }
   final schema = root['schemaVersion'];
   if (schema is! int || schema > maxSchemaVersion) {
     throw const BackupFormatException(
-      'This backup was made by a newer version of the app.',
-    );
+        'This backup was made by a newer version of the app.');
   }
   final tables = root['tables'];
   if (tables is! Map<String, dynamic>) {
@@ -137,15 +126,12 @@ BackupContents decodeBackup(String text, {required int maxSchemaVersion}) {
     programs: read('programs', Program.fromJson),
     workoutDays: read('workoutDays', WorkoutDay.fromJson),
     supersetGroups: read('supersetGroups', SupersetGroup.fromJson),
-    exercisePrescriptions: read(
-      'exercisePrescriptions',
-      ExercisePrescription.fromJson,
-    ),
+    exercisePrescriptions:
+        read('exercisePrescriptions', ExercisePrescription.fromJson),
     workoutSessions: read('workoutSessions', WorkoutSession.fromJson),
     setLogs: read('setLogs', SetLog.fromJson),
     miniSetLogs: read('miniSetLogs', MiniSetLog.fromJson),
-    settingEntries: hasSettings
-        ? read('settingEntries', SettingEntry.fromJson)
-        : null,
+    settingEntries:
+        hasSettings ? read('settingEntries', SettingEntry.fromJson) : null,
   );
 }

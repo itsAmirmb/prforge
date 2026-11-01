@@ -51,32 +51,27 @@ class SessionRepository {
       if (await findActiveSession() != null) {
         throw StateError('A workout is already in progress.');
       }
-      final day = await (_db.select(
-        _db.workoutDays,
-      )..where((d) => d.id.equals(dayId))).getSingle();
-      final sessionId = await _db
-          .into(_db.workoutSessions)
-          .insert(
+      final day = await (_db.select(_db.workoutDays)
+            ..where((d) => d.id.equals(dayId)))
+          .getSingle();
+      final sessionId = await _db.into(_db.workoutSessions).insert(
             WorkoutSessionsCompanion.insert(
               startedAt: DateTime.now(),
               programId: Value(day.programId),
               workoutDayId: Value(dayId),
             ),
           );
-      final prescriptions =
-          await (_db.select(_db.exercisePrescriptions)
-                ..where((p) => p.workoutDayId.equals(dayId))
-                ..orderBy([(p) => OrderingTerm.asc(p.orderIndex)]))
-              .get();
+      final prescriptions = await (_db.select(_db.exercisePrescriptions)
+            ..where((p) => p.workoutDayId.equals(dayId))
+            ..orderBy([(p) => OrderingTerm.asc(p.orderIndex)]))
+          .get();
       for (final p in prescriptions) {
         final last = await lastPerformance(p.exerciseId);
         for (var i = 0; i < p.targetSets; i++) {
           final double? weight = last.isEmpty
               ? p.targetWeightKg
               : (i < last.length ? last[i] : last.last).weightKg;
-          await _db
-              .into(_db.setLogs)
-              .insert(
+          await _db.into(_db.setLogs).insert(
                 SetLogsCompanion.insert(
                   sessionId: sessionId,
                   exerciseId: p.exerciseId,
@@ -84,18 +79,13 @@ class SessionRepository {
                   prescriptionId: Value(p.id),
                   setKind: Value(p.setType),
                   weightKg: Value(weight),
-                  reps: Value(
-                    repsForSet(
-                      i,
+                  reps: Value(repsForSet(i,
                       scheme: parseRepScheme(p.repScheme),
-                      fallback: p.targetReps,
-                    ),
-                  ),
+                      fallback: p.targetReps)),
                   // Superset membership is snapshotted so history keeps it
                   // after the plan changes.
                   supersetKey: Value(
-                    p.supersetGroupId == null ? null : 's${p.supersetGroupId}',
-                  ),
+                      p.supersetGroupId == null ? null : 's${p.supersetGroupId}'),
                   roundIndex: Value(p.supersetGroupId == null ? null : i),
                 ),
               );
@@ -108,101 +98,84 @@ class SessionRepository {
   /// Completes the session. Sets that were never marked done are discarded.
   Future<void> finishSession(int sessionId) {
     return _db.transaction(() async {
-      await (_db.delete(_db.setLogs)..where(
-            (l) => l.sessionId.equals(sessionId) & l.isCompleted.equals(false),
-          ))
+      await (_db.delete(_db.setLogs)
+            ..where((l) =>
+                l.sessionId.equals(sessionId) & l.isCompleted.equals(false)))
           .go();
-      await (_db.update(
-        _db.workoutSessions,
-      )..where((s) => s.id.equals(sessionId))).write(
-        WorkoutSessionsCompanion(
-          status: const Value(SessionStatus.completed),
-          completedAt: Value(DateTime.now()),
-        ),
-      );
+      await (_db.update(_db.workoutSessions)
+            ..where((s) => s.id.equals(sessionId)))
+          .write(WorkoutSessionsCompanion(
+        status: const Value(SessionStatus.completed),
+        completedAt: Value(DateTime.now()),
+      ));
     });
   }
 
   /// Deletes the session and all of its sets (cascade).
   Future<void> discardSession(int sessionId) async {
-    await (_db.delete(
-      _db.workoutSessions,
-    )..where((s) => s.id.equals(sessionId))).go();
+    await (_db.delete(_db.workoutSessions)..where((s) => s.id.equals(sessionId)))
+        .go();
   }
 
   // ───────── Sets ─────────
 
   Stream<List<SetLogWithExercise>> watchSessionSets(int sessionId) {
     final l = _db.setLogs;
-    final query =
-        _db.select(l).join([
-            innerJoin(_db.exercises, _db.exercises.id.equalsExp(l.exerciseId)),
-          ])
-          ..where(l.sessionId.equals(sessionId))
-          ..orderBy([OrderingTerm.asc(l.id)]);
-    return query.watch().map(
-      (rows) => [
-        for (final r in rows)
-          SetLogWithExercise(r.readTable(l), r.readTable(_db.exercises)),
-      ],
-    );
+    final query = _db.select(l).join([
+      innerJoin(_db.exercises, _db.exercises.id.equalsExp(l.exerciseId)),
+    ])
+      ..where(l.sessionId.equals(sessionId))
+      ..orderBy([OrderingTerm.asc(l.id)]);
+    return query.watch().map((rows) => [
+          for (final r in rows)
+            SetLogWithExercise(r.readTable(l), r.readTable(_db.exercises)),
+        ]);
   }
 
   Future<void> setWeight(int setId, double? weightKg) async {
-    await (_db.update(_db.setLogs)..where((l) => l.id.equals(setId))).write(
-      SetLogsCompanion(weightKg: Value(weightKg)),
-    );
+    await (_db.update(_db.setLogs)..where((l) => l.id.equals(setId)))
+        .write(SetLogsCompanion(weightKg: Value(weightKg)));
   }
 
   Future<void> setReps(int setId, int? reps) async {
-    await (_db.update(_db.setLogs)..where((l) => l.id.equals(setId))).write(
-      SetLogsCompanion(reps: Value(reps)),
-    );
+    await (_db.update(_db.setLogs)..where((l) => l.id.equals(setId)))
+        .write(SetLogsCompanion(reps: Value(reps)));
   }
 
   /// Marks a set done / not done. A set needs reps to be marked done.
   Future<void> setCompleted(int setId, bool completed) async {
-    final log = await (_db.select(
-      _db.setLogs,
-    )..where((l) => l.id.equals(setId))).getSingle();
+    final log = await (_db.select(_db.setLogs)..where((l) => l.id.equals(setId)))
+        .getSingle();
     if (completed && log.reps == null) {
       throw StateError('Enter reps before completing the set.');
     }
     // Keep the original time when an already-done set is "completed" again.
     final stamp = completed ? (log.completedAt ?? DateTime.now()) : null;
     await (_db.update(_db.setLogs)..where((l) => l.id.equals(setId))).write(
-      SetLogsCompanion(
-        isCompleted: Value(completed),
-        completedAt: Value(stamp),
-      ),
-    );
+        SetLogsCompanion(
+            isCompleted: Value(completed), completedAt: Value(stamp)));
   }
 
   /// Adds a set at the end of a block, copying weight and reps of the
   /// block's last set for fast entry.
   Future<int> addSet(int sessionId, int exerciseId, int? prescriptionId) async {
     final l = _db.setLogs;
-    final block =
-        await (_db.select(l)
-              ..where(
-                (s) =>
-                    s.sessionId.equals(sessionId) &
-                    s.exerciseId.equals(exerciseId) &
-                    (prescriptionId == null
-                        ? s.prescriptionId.isNull()
-                        : s.prescriptionId.equals(prescriptionId)),
-              )
-              ..orderBy([
-                (s) => OrderingTerm.desc(s.setIndex),
-                (s) => OrderingTerm.desc(s.id),
-              ])
-              ..limit(1))
-            .get();
+    final block = await (_db.select(l)
+          ..where((s) =>
+              s.sessionId.equals(sessionId) &
+              s.exerciseId.equals(exerciseId) &
+              (prescriptionId == null
+                  ? s.prescriptionId.isNull()
+                  : s.prescriptionId.equals(prescriptionId)))
+          ..orderBy([
+            (s) => OrderingTerm.desc(s.setIndex),
+            (s) => OrderingTerm.desc(s.id),
+          ])
+          ..limit(1))
+        .get();
     final last = block.isEmpty ? null : block.first;
     final lastRound = last?.roundIndex;
-    return _db
-        .into(l)
-        .insert(
+    return _db.into(l).insert(
           SetLogsCompanion.insert(
             sessionId: sessionId,
             exerciseId: exerciseId,
@@ -232,9 +205,8 @@ class SessionRepository {
     for (final s in sets) {
       final position = tokens.indexOf(entryToken(s));
       if (position < 0 || s.entryOrder == position) continue;
-      await (_db.update(_db.setLogs)..where((l) => l.id.equals(s.id))).write(
-        SetLogsCompanion(entryOrder: Value(position)),
-      );
+      await (_db.update(_db.setLogs)..where((l) => l.id.equals(s.id)))
+          .write(SetLogsCompanion(entryOrder: Value(position)));
     }
   }
 
@@ -268,9 +240,7 @@ class SessionRepository {
       final last = await lastPerformance(exerciseId);
       final count = last.isEmpty ? newExerciseSets : last.length;
       for (var i = 0; i < count; i++) {
-        await _db
-            .into(_db.setLogs)
-            .insert(
+        await _db.into(_db.setLogs).insert(
               SetLogsCompanion.insert(
                 sessionId: sessionId,
                 exerciseId: exerciseId,
@@ -307,22 +277,19 @@ class SessionRepository {
   }) {
     return _db.transaction(() async {
       final l = _db.setLogs;
-      final editable =
-          await (_db.select(l)
-                ..where(
-                  (s) =>
-                      s.sessionId.equals(sessionId) &
-                      s.exerciseId.equals(exerciseId) &
-                      (prescriptionId == null
-                          ? s.prescriptionId.isNull()
-                          : s.prescriptionId.equals(prescriptionId)) &
-                      s.isCompleted.equals(false),
-                )
-                ..orderBy([
-                  (s) => OrderingTerm.asc(s.setIndex),
-                  (s) => OrderingTerm.asc(s.id),
-                ]))
-              .get();
+      final editable = await (_db.select(l)
+            ..where((s) =>
+                s.sessionId.equals(sessionId) &
+                s.exerciseId.equals(exerciseId) &
+                (prescriptionId == null
+                    ? s.prescriptionId.isNull()
+                    : s.prescriptionId.equals(prescriptionId)) &
+                s.isCompleted.equals(false))
+            ..orderBy([
+              (s) => OrderingTerm.asc(s.setIndex),
+              (s) => OrderingTerm.asc(s.id),
+            ]))
+          .get();
       if (editable.isEmpty) {
         throw StateError('There are no unfinished sets to update.');
       }
@@ -343,17 +310,15 @@ class SessionRepository {
   /// Deletes a set (and, through cascade, its mini-sets) and returns both so
   /// the caller can offer Undo.
   Future<DeletedSet> deleteSet(int setId) async {
-    final log = await (_db.select(
-      _db.setLogs,
-    )..where((l) => l.id.equals(setId))).getSingle();
-    final minis =
-        await (_db.select(_db.miniSetLogs)
-              ..where((m) => m.setLogId.equals(setId))
-              ..orderBy([
-                (m) => OrderingTerm.asc(m.miniSetIndex),
-                (m) => OrderingTerm.asc(m.id),
-              ]))
-            .get();
+    final log = await (_db.select(_db.setLogs)..where((l) => l.id.equals(setId)))
+        .getSingle();
+    final minis = await (_db.select(_db.miniSetLogs)
+          ..where((m) => m.setLogId.equals(setId))
+          ..orderBy([
+            (m) => OrderingTerm.asc(m.miniSetIndex),
+            (m) => OrderingTerm.asc(m.id),
+          ]))
+        .get();
     await (_db.delete(_db.setLogs)..where((l) => l.id.equals(setId))).go();
     return DeletedSet(log, minis);
   }
@@ -373,46 +338,40 @@ class SessionRepository {
   /// Seconds to rest after [setId] was completed, or null for no timer.
   /// Uses the plan's rest and, inside a superset, the group's rest values
   /// (between members, and after the last set of a round).
-  Future<int?> restAfterCompleting(
-    int setId, {
-    int defaultRest = defaultRestSeconds,
-  }) async {
-    final log = await (_db.select(
-      _db.setLogs,
-    )..where((l) => l.id.equals(setId))).getSingleOrNull();
+  Future<int?> restAfterCompleting(int setId,
+      {int defaultRest = defaultRestSeconds}) async {
+    final log = await (_db.select(_db.setLogs)..where((l) => l.id.equals(setId)))
+        .getSingleOrNull();
     if (log == null || !log.isCompleted) return null;
 
     final prescriptionId = log.prescriptionId;
     final prescription = prescriptionId == null
         ? null
-        : await (_db.select(
-            _db.exercisePrescriptions,
-          )..where((p) => p.id.equals(prescriptionId))).getSingleOrNull();
+        : await (_db.select(_db.exercisePrescriptions)
+              ..where((p) => p.id.equals(prescriptionId)))
+            .getSingleOrNull();
 
     final key = log.supersetKey;
     if (key == null) {
       return restSecondsAfterSet(
-        isSuperset: false,
-        roundComplete: true,
-        setRest: prescription?.restSeconds,
-        defaultRest: defaultRest,
-      );
+          isSuperset: false,
+          roundComplete: true,
+          setRest: prescription?.restSeconds,
+          defaultRest: defaultRest);
     }
 
     // The key is 's{groupId}' (see startSession).
     final groupId = int.tryParse(key.substring(1));
     final group = groupId == null
         ? null
-        : await (_db.select(
-            _db.supersetGroups,
-          )..where((g) => g.id.equals(groupId))).getSingleOrNull();
+        : await (_db.select(_db.supersetGroups)
+              ..where((g) => g.id.equals(groupId)))
+            .getSingleOrNull();
     final round = log.roundIndex ?? log.setIndex;
-    final members =
-        await (_db.select(_db.setLogs)..where(
-              (l) =>
-                  l.sessionId.equals(log.sessionId) & l.supersetKey.equals(key),
-            ))
-            .get();
+    final members = await (_db.select(_db.setLogs)
+          ..where((l) =>
+              l.sessionId.equals(log.sessionId) & l.supersetKey.equals(key)))
+        .get();
     final roundComplete = members
         .where((s) => (s.roundIndex ?? s.setIndex) == round)
         .every((s) => s.isCompleted);
@@ -434,27 +393,21 @@ class SessionRepository {
   Future<List<SetLog>> lastPerformance(int exerciseId) async {
     final l = _db.setLogs;
     final s = _db.workoutSessions;
-    final latest =
-        await (_db.select(l).join([innerJoin(s, s.id.equalsExp(l.sessionId))])
-              ..where(
-                l.exerciseId.equals(exerciseId) &
-                    l.isCompleted.equals(true) &
-                    s.status.equalsValue(SessionStatus.completed),
-              )
-              ..orderBy([
-                OrderingTerm.desc(s.startedAt),
-                OrderingTerm.desc(s.id),
-              ])
-              ..limit(1))
-            .getSingleOrNull();
+    final latest = await (_db.select(l).join([
+      innerJoin(s, s.id.equalsExp(l.sessionId)),
+    ])
+          ..where(l.exerciseId.equals(exerciseId) &
+              l.isCompleted.equals(true) &
+              s.status.equalsValue(SessionStatus.completed))
+          ..orderBy([OrderingTerm.desc(s.startedAt), OrderingTerm.desc(s.id)])
+          ..limit(1))
+        .getSingleOrNull();
     if (latest == null) return const [];
     return (_db.select(l)
-          ..where(
-            (x) =>
-                x.sessionId.equals(latest.read(s.id)!) &
-                x.exerciseId.equals(exerciseId) &
-                x.isCompleted.equals(true),
-          )
+          ..where((x) =>
+              x.sessionId.equals(latest.read(s.id)!) &
+              x.exerciseId.equals(exerciseId) &
+              x.isCompleted.equals(true))
           ..orderBy([
             (x) => OrderingTerm.asc(x.setIndex),
             (x) => OrderingTerm.asc(x.id),

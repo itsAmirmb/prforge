@@ -37,9 +37,7 @@ class _WorkoutClockChipState extends ConsumerState<WorkoutClockChip> {
 
   @override
   Widget build(BuildContext context) {
-    final enabled = ref.watch(
-      userSettingsProvider.select((s) => s.showWorkoutClock),
-    );
+    final enabled = ref.watch(userSettingsProvider.select((s) => s.showWorkoutClock));
     final session = ref.watch(activeSessionProvider).value;
     if (!enabled || session == null || session.id != widget.sessionId) {
       return const SizedBox.shrink();
@@ -50,8 +48,9 @@ class _WorkoutClockChipState extends ConsumerState<WorkoutClockChip> {
       child: ExcludeSemantics(
         child: Text(
           text,
-          style: Theme.of(context).textTheme.labelMedium
-              ?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
         ),
       ),
     );

@@ -1,6 +1,10 @@
 package com.prforge.prforge
 
+import android.Manifest
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.Intent
 import android.media.AudioManager
 import android.media.ToneGenerator
@@ -45,6 +49,18 @@ class MainActivity : FlutterActivity() {
                         beep()
                         result.success(null)
                     }
+                    "scheduleRestEnd" -> {
+                        scheduleRestEnd(call.arguments as? Map<*, *>)
+                        result.success(null)
+                    }
+                    "cancelRestEnd" -> {
+                        cancelRestEnd()
+                        result.success(null)
+                    }
+                    "requestNotificationPermission" -> {
+                        requestNotificationPermission()
+                        result.success(null)
+                    }
                     "keepScreenOn" -> {
                         keepScreenOn(call.arguments as? Boolean ?: false)
                         result.success(null)
@@ -84,6 +100,55 @@ class MainActivity : FlutterActivity() {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
+    // ───────── Rest-over alarm (works with the screen off) ─────────
+
+    private fun restAlarmIntent(extras: Map<*, *>?): PendingIntent {
+        val intent = Intent(this, RestAlarmReceiver::class.java)
+        if (extras != null) {
+            intent.putExtra("sound", extras["sound"] as? Boolean ?: true)
+            intent.putExtra("vibration", extras["vibration"] as? Boolean ?: true)
+            intent.putExtra("title", extras["title"] as? String ?: "")
+            intent.putExtra("body", extras["body"] as? String ?: "")
+        }
+        return PendingIntent.getBroadcast(
+            this, 1, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
+    // Scheduling again with the same PendingIntent replaces the old alarm.
+    private fun scheduleRestEnd(args: Map<*, *>?) {
+        val at = (args?.get("atMillis") as? Number)?.toLong() ?: return
+        val alarms = getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+        val pending = restAlarmIntent(args)
+        val exactAllowed =
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.S || alarms.canScheduleExactAlarms()
+        try {
+            if (exactAllowed) {
+                alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending)
+            } else {
+                alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending)
+            }
+        } catch (_: SecurityException) {
+            alarms.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pending)
+        }
+    }
+
+    private fun cancelRestEnd() {
+        val alarms = getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+        alarms.cancel(restAlarmIntent(null))
+    }
+
+    // Only the notification needs this; sound and vibration work without it.
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 7)
         }
     }
 }

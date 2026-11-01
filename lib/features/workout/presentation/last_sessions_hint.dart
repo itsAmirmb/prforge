@@ -13,12 +13,11 @@ import 'exercise_history_sheet.dart';
 /// the exercise (weights per set, rest-pause parts included). Tap for the
 /// previous sessions.
 class LastSessionsHint extends ConsumerWidget {
-  const LastSessionsHint({
-    super.key,
-    required this.exercise,
-    this.showName = false,
-    this.currentWeight,
-  });
+  const LastSessionsHint(
+      {super.key,
+      required this.exercise,
+      this.showName = false,
+      this.currentWeight});
 
   final Exercise exercise;
 
@@ -34,18 +33,15 @@ class LastSessionsHint extends ConsumerWidget {
     final progress = ref.watch(exerciseProgressProvider(exercise.id)).value;
     if (progress == null || progress.isEmpty) return const SizedBox.shrink();
 
-    final text =
-        '${showName ? '${exercise.name} last' : 'Last'}: '
+    final text = '${showName ? '${exercise.name} last' : 'Last'}: '
         '${patternText(progress.points.last.segments)}';
     final settings = ref.watch(userSettingsProvider);
     final plateau = settings.plateauHint
-        ? detectPlateau(
-            progress.points,
+        ? detectPlateau(progress.points,
             now: DateTime.now(),
             currentWeight: currentWeight,
             minWeeks: settings.plateauWeeks,
-            minSessions: settings.plateauSessions,
-          )
+            minSessions: settings.plateauSessions)
         : null;
     final theme = Theme.of(context);
     return InkWell(
@@ -67,19 +63,15 @@ class LastSessionsHint extends ConsumerWidget {
                 padding: const EdgeInsets.only(top: 2),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.trending_flat,
-                      size: 16,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                    Icon(Icons.trending_flat,
+                        size: 16, color: theme.colorScheme.onSurfaceVariant),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Same weight (${formatWeight(plateau.weight)} kg) for '
                         '${plateau.weeks} weeks · ${plateau.sessions} sessions',
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
+                            color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ),
                   ],

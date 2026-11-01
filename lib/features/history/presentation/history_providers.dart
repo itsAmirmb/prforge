@@ -9,5 +9,5 @@ final historyRepositoryProvider = Provider<HistoryRepository>(
 
 final completedSessionsProvider =
     StreamProvider.autoDispose<List<SessionSummary>>(
-      (ref) => ref.watch(historyRepositoryProvider).watchCompleted(),
-    );
+  (ref) => ref.watch(historyRepositoryProvider).watchCompleted(),
+);

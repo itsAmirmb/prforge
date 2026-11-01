@@ -26,9 +26,7 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
-          content: Text(
-            archived ? '"${e.name}" archived' : '"${e.name}" restored',
-          ),
+          content: Text(archived ? '"${e.name}" archived' : '"${e.name}" restored'),
           action: SnackBarAction(
             label: 'Undo',
             onPressed: () => repo.setArchived(e.id, !archived),
@@ -47,9 +45,9 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
         actions: [
           IconButton(
             tooltip: _showArchived ? 'Show active' : 'Show archived',
-            icon: Icon(
-              _showArchived ? Icons.fitness_center : Icons.inventory_2_outlined,
-            ),
+            icon: Icon(_showArchived
+                ? Icons.fitness_center
+                : Icons.inventory_2_outlined),
             onPressed: () => setState(() => _showArchived = !_showArchived),
           ),
         ],
@@ -68,9 +66,7 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
           }
           return ListView.builder(
             padding: const EdgeInsets.only(
-              top: AppSpacing.sm,
-              bottom: AppSpacing.fabClearance,
-            ),
+                top: AppSpacing.sm, bottom: AppSpacing.fabClearance),
             itemCount: list.length,
             itemBuilder: (context, i) {
               final e = list[i];
@@ -80,38 +76,32 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
                 if (e.isBodyweight) 'Bodyweight',
               ].join(' · ');
               return Card(
-                child: ListTile(
-                  title: Text(
-                    e.name,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  subtitle: subtitle.isEmpty ? null : Text(subtitle),
-                  onTap: () => showExerciseForm(context, exercise: e),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        tooltip: 'Progress',
-                        icon: const Icon(Icons.show_chart),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => ExerciseProgressScreen(exercise: e),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: _showArchived ? 'Restore' : 'Archive',
-                        icon: Icon(
-                          _showArchived
-                              ? Icons.unarchive_outlined
-                              : Icons.archive_outlined,
-                        ),
-                        onPressed: () => _setArchived(e, !_showArchived),
-                      ),
-                    ],
-                  ),
+                  child: ListTile(
+                title: Text(e.name,
+                    style: Theme.of(context).textTheme.titleMedium),
+                subtitle: subtitle.isEmpty ? null : Text(subtitle),
+                onTap: () => showExerciseForm(context, exercise: e),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Progress',
+                      icon: const Icon(Icons.show_chart),
+                      onPressed: () =>
+                          Navigator.of(context).push(MaterialPageRoute<void>(
+                        builder: (_) => ExerciseProgressScreen(exercise: e),
+                      )),
+                    ),
+                    IconButton(
+                      tooltip: _showArchived ? 'Restore' : 'Archive',
+                      icon: Icon(_showArchived
+                          ? Icons.unarchive_outlined
+                          : Icons.archive_outlined),
+                      onPressed: () => _setArchived(e, !_showArchived),
+                    ),
+                  ],
                 ),
-              );
+              ));
             },
           );
         },

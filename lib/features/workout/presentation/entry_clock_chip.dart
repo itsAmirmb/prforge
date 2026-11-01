@@ -67,9 +67,7 @@ class _ClockView extends StatelessWidget {
 /// All sets of the session in one list, once the data is there and the
 /// session is the active one; null otherwise (the clocks stay hidden).
 ({DateTime start, List<SetLog> sets})? _sessionSets(
-  WidgetRef ref,
-  int sessionId,
-) {
+    WidgetRef ref, int sessionId) {
   final session = ref.watch(activeSessionProvider).value;
   final entries = ref.watch(sessionEntriesProvider(sessionId)).value;
   if (session == null || session.id != sessionId || entries == null) {
@@ -88,11 +86,7 @@ class _ClockView extends StatelessWidget {
 /// on, then stays at the time it took. Hidden until the exercise is reached.
 /// Everything is derived from the logged set times, so it survives restarts.
 class EntryClockChip extends ConsumerStatefulWidget {
-  const EntryClockChip({
-    super.key,
-    required this.sessionId,
-    required this.entry,
-  });
+  const EntryClockChip({super.key, required this.sessionId, required this.entry});
 
   final int sessionId;
   final SessionEntry entry;
@@ -105,9 +99,8 @@ class _EntryClockChipState extends ConsumerState<EntryClockChip>
     with _ClockTicker {
   @override
   Widget build(BuildContext context) {
-    final enabled = ref.watch(
-      userSettingsProvider.select((s) => s.showExerciseClock),
-    );
+    final enabled =
+        ref.watch(userSettingsProvider.select((s) => s.showExerciseClock));
     final data = enabled ? _sessionSets(ref, widget.sessionId) : null;
     final currentId = ref.watch(currentSetIdProvider(widget.sessionId));
 
@@ -117,11 +110,9 @@ class _EntryClockChipState extends ConsumerState<EntryClockChip>
             entry: widget.entry,
             allSets: data.sets,
             sessionStart: data.start,
-            isCurrent:
-                currentId != null &&
-                widget.entry.blocks.any(
-                  (b) => b.sets.any((s) => s.id == currentId),
-                ),
+            isCurrent: currentId != null &&
+                widget.entry.blocks
+                    .any((b) => b.sets.any((s) => s.id == currentId)),
             now: DateTime.now(),
           );
     syncTicker(clock?.running ?? false);
@@ -140,13 +131,13 @@ class SetClockChip extends ConsumerStatefulWidget {
   ConsumerState<SetClockChip> createState() => _SetClockChipState();
 }
 
-class _SetClockChipState extends ConsumerState<SetClockChip> with _ClockTicker {
+class _SetClockChipState extends ConsumerState<SetClockChip>
+    with _ClockTicker {
   @override
   Widget build(BuildContext context) {
     final log = widget.log;
-    final enabled = ref.watch(
-      userSettingsProvider.select((s) => s.showSetClock),
-    );
+    final enabled =
+        ref.watch(userSettingsProvider.select((s) => s.showSetClock));
     final data = enabled ? _sessionSets(ref, log.sessionId) : null;
     final currentId = ref.watch(currentSetIdProvider(log.sessionId));
 

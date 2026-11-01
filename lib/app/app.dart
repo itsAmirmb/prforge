@@ -10,9 +10,7 @@ class PrforgeApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(
-      userSettingsProvider.select((s) => s.themeMode),
-    );
+    final themeMode = ref.watch(userSettingsProvider.select((s) => s.themeMode));
     return MaterialApp(
       title: 'PRForge',
       debugShowCheckedModeBanner: false,

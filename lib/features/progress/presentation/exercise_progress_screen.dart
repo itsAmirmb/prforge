@@ -39,9 +39,8 @@ class _ExerciseProgressScreenState
         data: (progress) {
           if (progress.isEmpty) {
             return const EmptyState(
-              icon: Icons.show_chart,
-              message: 'No finished sets for this exercise yet.',
-            );
+                icon: Icons.show_chart,
+                message: 'No finished sets for this exercise yet.');
           }
           return _Content(
             progress: progress,
@@ -55,21 +54,18 @@ class _ExerciseProgressScreenState
 }
 
 class _Content extends StatelessWidget {
-  const _Content({
-    required this.progress,
-    required this.metric,
-    required this.onMetric,
-  });
+  const _Content(
+      {required this.progress, required this.metric, required this.onMetric});
 
   final ExerciseProgress progress;
   final _Metric metric;
   final ValueChanged<_Metric> onMetric;
 
   double? _value(SessionPoint p) => switch (metric) {
-    _Metric.maxWeight => p.maxWeight,
-    _Metric.volume => p.volumeKg,
-    _Metric.totalReps => p.totalReps.toDouble(),
-  };
+        _Metric.maxWeight => p.maxWeight,
+        _Metric.volume => p.volumeKg,
+        _Metric.totalReps => p.totalReps.toDouble(),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -80,27 +76,21 @@ class _Content extends StatelessWidget {
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.lg,
-        AppSpacing.xl,
-      ),
+          AppSpacing.lg, AppSpacing.md, AppSpacing.lg, AppSpacing.xl),
       children: [
         IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _Stat(
-                label: 'Max weight',
-                value: maxWeight == null ? '—' : _kg(maxWeight),
-              ),
+                  label: 'Max weight',
+                  value: maxWeight == null ? '—' : _kg(maxWeight)),
               const SizedBox(width: AppSpacing.sm),
               _Stat(label: 'Sessions', value: '${points.length}'),
               const SizedBox(width: AppSpacing.sm),
               _Stat(
-                label: 'Total volume',
-                value: _kg(progress.totalVolumeKg.roundToDouble()),
-              ),
+                  label: 'Total volume',
+                  value: _kg(progress.totalVolumeKg.roundToDouble())),
             ],
           ),
         ),
@@ -121,15 +111,11 @@ class _Content extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                formatDateTime(points.first.date).split(' · ').first,
-                style: theme.textTheme.labelSmall,
-              ),
+              Text(formatDateTime(points.first.date).split(' · ').first,
+                  style: theme.textTheme.labelSmall),
               if (points.length > 1)
-                Text(
-                  formatDateTime(points.last.date).split(' · ').first,
-                  style: theme.textTheme.labelSmall,
-                ),
+                Text(formatDateTime(points.last.date).split(' · ').first,
+                    style: theme.textTheme.labelSmall),
             ],
           ),
         ),
@@ -143,26 +129,21 @@ class _Content extends StatelessWidget {
             2: FlexColumnWidth(1),
           },
           children: [
-            TableRow(
-              children: [
-                Text('Weight', style: theme.textTheme.labelMedium),
-                Text('Best reps', style: theme.textTheme.labelMedium),
-                Text('Sets', style: theme.textTheme.labelMedium),
-              ],
-            ),
+            TableRow(children: [
+              Text('Weight', style: theme.textTheme.labelMedium),
+              Text('Best reps', style: theme.textTheme.labelMedium),
+              Text('Sets', style: theme.textTheme.labelMedium),
+            ]),
             for (final r in progress.records)
-              TableRow(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Text(
-                      r.weight == null ? 'Bodyweight' : _kg(r.weight!),
-                    ),
-                  ),
-                  Text('${r.bestReps}'),
-                  Text('${r.sets}'),
-                ],
-              ),
+              TableRow(children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Text(
+                      r.weight == null ? 'Bodyweight' : _kg(r.weight!)),
+                ),
+                Text('${r.bestReps}'),
+                Text('${r.sets}'),
+              ]),
           ],
         ),
         const SizedBox(height: 24),
@@ -198,12 +179,9 @@ class _Stat extends StatelessWidget {
           children: [
             Text(value, style: theme.textTheme.titleLarge),
             const SizedBox(height: 2),
-            Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
+            Text(label,
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
           ],
         ),
       ),
@@ -232,9 +210,8 @@ class _SessionRow extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       title: Text(patternText(point.segments)),
       subtitle: Text(
-        '${formatDateTime(point.date).split(' · ').first} · '
-        '${point.sets} sets · ${point.totalReps} reps',
-      ),
+          '${formatDateTime(point.date).split(' · ').first} · '
+          '${point.sets} sets · ${point.totalReps} reps'),
       trailing: delta == null ? null : Text(delta),
     );
   }

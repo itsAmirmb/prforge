@@ -28,9 +28,8 @@ class SyncedNumberField extends StatefulWidget {
 }
 
 class _SyncedNumberFieldState extends State<SyncedNumberField> {
-  late final _controller = TextEditingController(
-    text: formatWeight(widget.value),
-  );
+  late final _controller =
+      TextEditingController(text: formatWeight(widget.value));
   final _focus = FocusNode();
 
   static double? _parse(String text) =>

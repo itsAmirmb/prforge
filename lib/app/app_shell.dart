@@ -8,6 +8,7 @@ import '../features/exercises/presentation/exercise_list_screen.dart';
 import '../features/history/presentation/history_screen.dart';
 import '../features/programs/presentation/program_list_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/workout/presentation/rest_alarm.dart';
 import '../features/workout/presentation/workout_actions.dart';
 import '../features/workout/presentation/workout_providers.dart';
 import '../features/workout/presentation/workout_session_screen.dart';
@@ -30,10 +31,10 @@ class _AppShellState extends ConsumerState<AppShell> {
   void initState() {
     super.initState();
     // Headset button long-press: tick the current set of the active workout.
-    _headsetSub = ref
-        .read(headsetServiceProvider)
-        .triggers
-        .listen((_) => ref.read(workoutActionsProvider).completeCurrentSet());
+    _headsetSub = ref.read(headsetServiceProvider).triggers.listen(
+        (_) => ref.read(workoutActionsProvider).completeCurrentSet());
+    // Keeps the screen-off rest alarm watcher alive for the whole app.
+    ref.listenManual(restAlarmControllerProvider, (_, _) {});
   }
 
   @override
@@ -66,12 +67,11 @@ class _AppShellState extends ConsumerState<AppShell> {
             child: active == null
                 ? const SizedBox(width: double.infinity)
                 : _ResumeBar(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) =>
-                            WorkoutSessionScreen(sessionId: active.id),
-                      ),
-                    ),
+                    onTap: () =>
+                        Navigator.of(context).push(MaterialPageRoute<void>(
+                      builder: (_) =>
+                          WorkoutSessionScreen(sessionId: active.id),
+                    )),
                   ),
           ),
           NavigationBar(
@@ -79,25 +79,21 @@ class _AppShellState extends ConsumerState<AppShell> {
             onDestinationSelected: (i) => setState(() => _index = i),
             destinations: const [
               NavigationDestination(
-                icon: Icon(Icons.list_alt_outlined),
-                selectedIcon: Icon(Icons.list_alt),
-                label: 'Programs',
-              ),
+                  icon: Icon(Icons.list_alt_outlined),
+                  selectedIcon: Icon(Icons.list_alt),
+                  label: 'Programs'),
               NavigationDestination(
-                icon: Icon(Icons.history),
-                selectedIcon: Icon(Icons.history_toggle_off),
-                label: 'History',
-              ),
+                  icon: Icon(Icons.history),
+                  selectedIcon: Icon(Icons.history_toggle_off),
+                  label: 'History'),
               NavigationDestination(
-                icon: Icon(Icons.fitness_center_outlined),
-                selectedIcon: Icon(Icons.fitness_center),
-                label: 'Exercises',
-              ),
+                  icon: Icon(Icons.fitness_center_outlined),
+                  selectedIcon: Icon(Icons.fitness_center),
+                  label: 'Exercises'),
               NavigationDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings),
-                label: 'Settings',
-              ),
+                  icon: Icon(Icons.settings_outlined),
+                  selectedIcon: Icon(Icons.settings),
+                  label: 'Settings'),
             ],
           ),
         ],
@@ -117,11 +113,7 @@ class _ResumeBar extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.sm,
-      ),
+          AppSpacing.md, AppSpacing.sm, AppSpacing.md, AppSpacing.sm),
       child: Material(
         color: scheme.primaryContainer,
         borderRadius: BorderRadius.circular(AppRadius.lg),
@@ -139,14 +131,14 @@ class _ResumeBar extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Workout in progress',
-                      style: Theme.of(context).textTheme.titleSmall
-                          ?.copyWith(color: scheme.onPrimaryContainer),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: scheme.onPrimaryContainer),
                     ),
                   ),
                   Text(
                     'Resume',
-                    style: Theme.of(context).textTheme.labelLarge
-                        ?.copyWith(color: scheme.onPrimaryContainer),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: scheme.onPrimaryContainer),
                   ),
                   const SizedBox(width: 4),
                   Icon(Icons.chevron_right, color: scheme.onPrimaryContainer),

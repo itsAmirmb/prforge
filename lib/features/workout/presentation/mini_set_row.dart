@@ -19,15 +19,13 @@ class MiniSetRow extends ConsumerWidget {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: const Text('Mini-set deleted'),
-          action: SnackBarAction(
-            label: 'Undo',
-            onPressed: () => repo.restore(deleted),
-          ),
+      ..showSnackBar(SnackBar(
+        content: const Text('Mini-set deleted'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () => repo.restore(deleted),
         ),
-      );
+      ));
   }
 
   @override
@@ -40,10 +38,7 @@ class MiniSetRow extends ConsumerWidget {
         children: [
           SizedBox(
             width: 28,
-            child: Text(
-              '+$number',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            child: Text('+$number', style: Theme.of(context).textTheme.bodySmall),
           ),
           Expanded(
             child: SyncedNumberField(

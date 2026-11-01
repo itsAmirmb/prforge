@@ -33,17 +33,13 @@ String prescriptionSummary(ExercisePrescription p) {
 }
 
 Future<void> _confirmRemove(
-  BuildContext context,
-  WidgetRef ref,
-  PrescriptionWithExercise item,
-) async {
+    BuildContext context, WidgetRef ref, PrescriptionWithExercise item) async {
   final confirmed = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('Remove from plan?'),
       content: Text(
-        '"${item.exercise.name}" will be removed from this day. Logged workouts are not affected.',
-      ),
+          '"${item.exercise.name}" will be removed from this day. Logged workouts are not affected.'),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(ctx).pop(false),
@@ -81,48 +77,42 @@ class SinglePrescriptionTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
-      child: ListTile(
-        title: Text(
-          item.exercise.name,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        subtitle: Text(prescriptionSummary(item.prescription)),
-        onTap: () =>
-            showPrescriptionForm(context, dayId: dayId, existing: item),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            PopupMenuButton<String>(
-              onSelected: (v) {
-                if (v == 'superset') {
-                  ref.read(supersetRepositoryProvider).createGroup(dayId, [
-                    item.prescription.id,
-                    nextSingle!.prescription.id,
-                  ]);
-                } else {
-                  _confirmRemove(context, ref, item);
-                }
-              },
-              itemBuilder: (_) => [
-                PopupMenuItem(
-                  value: 'superset',
-                  enabled: nextSingle != null,
-                  child: const Text('Superset with next'),
-                ),
-                const PopupMenuItem(value: 'remove', child: Text('Remove')),
-              ],
-            ),
-            ReorderableDragStartListener(
-              index: dragIndex,
-              child: const Padding(
-                padding: EdgeInsets.all(12),
-                child: Icon(Icons.drag_handle),
+        child: ListTile(
+      title: Text(item.exercise.name,
+          style: Theme.of(context).textTheme.titleMedium),
+      subtitle: Text(prescriptionSummary(item.prescription)),
+      onTap: () => showPrescriptionForm(context, dayId: dayId, existing: item),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PopupMenuButton<String>(
+            onSelected: (v) {
+              if (v == 'superset') {
+                ref.read(supersetRepositoryProvider).createGroup(
+                    dayId, [item.prescription.id, nextSingle!.prescription.id]);
+              } else {
+                _confirmRemove(context, ref, item);
+              }
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'superset',
+                enabled: nextSingle != null,
+                child: const Text('Superset with next'),
               ),
+              const PopupMenuItem(value: 'remove', child: Text('Remove')),
+            ],
+          ),
+          ReorderableDragStartListener(
+            index: dragIndex,
+            child: const Padding(
+              padding: EdgeInsets.all(12),
+              child: Icon(Icons.drag_handle),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
+    ));
   }
 }
 
@@ -142,12 +132,12 @@ class SupersetGroupCard extends ConsumerWidget {
   final int dragIndex;
 
   String get _subtitle => [
-    '${group.rounds} rounds',
-    if (group.restBetweenSeconds != null)
-      'rest between ${group.restBetweenSeconds}s',
-    if (group.restAfterRoundSeconds != null)
-      'rest after round ${group.restAfterRoundSeconds}s',
-  ].join(' · ');
+        '${group.rounds} rounds',
+        if (group.restBetweenSeconds != null)
+          'rest between ${group.restBetweenSeconds}s',
+        if (group.restAfterRoundSeconds != null)
+          'rest after round ${group.restAfterRoundSeconds}s',
+      ].join(' · ');
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -163,10 +153,8 @@ class SupersetGroupCard extends ConsumerWidget {
               color: scheme.secondaryContainer,
               onColor: scheme.onSecondaryContainer,
             ),
-            title: Text(
-              group.name ?? 'Superset',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            title: Text(group.name ?? 'Superset',
+                style: Theme.of(context).textTheme.titleMedium),
             subtitle: Text(_subtitle),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -177,12 +165,10 @@ class SupersetGroupCard extends ConsumerWidget {
                       case 'edit':
                         showSupersetForm(context, group);
                       case 'add':
-                        showPrescriptionForm(
-                          context,
-                          dayId: dayId,
-                          groupId: group.id,
-                          lockedSets: group.rounds,
-                        );
+                        showPrescriptionForm(context,
+                            dayId: dayId,
+                            groupId: group.id,
+                            lockedSets: group.rounds);
                       case 'ungroup':
                         repo.ungroup(group.id);
                     }
@@ -209,12 +195,8 @@ class SupersetGroupCard extends ConsumerWidget {
               contentPadding: const EdgeInsets.only(left: 72, right: 4),
               title: Text(members[i].exercise.name),
               subtitle: Text(prescriptionSummary(members[i].prescription)),
-              onTap: () => showPrescriptionForm(
-                context,
-                dayId: dayId,
-                existing: members[i],
-                lockedSets: group.rounds,
-              ),
+              onTap: () => showPrescriptionForm(context,
+                  dayId: dayId, existing: members[i], lockedSets: group.rounds),
               trailing: PopupMenuButton<String>(
                 onSelected: (v) {
                   final id = members[i].prescription.id;
@@ -231,23 +213,15 @@ class SupersetGroupCard extends ConsumerWidget {
                 },
                 itemBuilder: (_) => [
                   PopupMenuItem(
-                    value: 'up',
-                    enabled: i > 0,
-                    child: const Text('Move up'),
-                  ),
+                      value: 'up', enabled: i > 0, child: const Text('Move up')),
                   PopupMenuItem(
-                    value: 'down',
-                    enabled: i < members.length - 1,
-                    child: const Text('Move down'),
-                  ),
+                      value: 'down',
+                      enabled: i < members.length - 1,
+                      child: const Text('Move down')),
                   const PopupMenuItem(
-                    value: 'leave',
-                    child: Text('Remove from superset'),
-                  ),
+                      value: 'leave', child: Text('Remove from superset')),
                   const PopupMenuItem(
-                    value: 'remove',
-                    child: Text('Remove from plan'),
-                  ),
+                      value: 'remove', child: Text('Remove from plan')),
                 ],
               ),
             ),

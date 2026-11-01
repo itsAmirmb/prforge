@@ -29,13 +29,10 @@ class _ExercisePickerState extends ConsumerState<_ExercisePicker> {
     final async = ref.watch(exerciseListProvider(false));
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.7,
-          ),
+              maxHeight: MediaQuery.of(context).size.height * 0.7),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -47,20 +44,16 @@ class _ExercisePickerState extends ConsumerState<_ExercisePicker> {
                     prefixIcon: Icon(Icons.search),
                     hintText: 'Search exercises',
                   ),
-                  onChanged: (v) =>
-                      setState(() => _query = v.trim().toLowerCase()),
+                  onChanged: (v) => setState(() => _query = v.trim().toLowerCase()),
                 ),
               ),
               Flexible(
                 child: async.when(
                   loading: () => const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: CircularProgressIndicator(),
-                  ),
-                  error: (e, _) => Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text('Error: $e'),
-                  ),
+                      padding: EdgeInsets.all(24),
+                      child: CircularProgressIndicator()),
+                  error: (e, _) =>
+                      Padding(padding: const EdgeInsets.all(24), child: Text('Error: $e')),
                   data: (all) {
                     final list = [
                       for (final e in all)
@@ -70,8 +63,7 @@ class _ExercisePickerState extends ConsumerState<_ExercisePicker> {
                       return const Padding(
                         padding: EdgeInsets.all(24),
                         child: Text(
-                          'No exercises found. Create one in the Exercises tab.',
-                        ),
+                            'No exercises found. Create one in the Exercises tab.'),
                       );
                     }
                     return ListView.builder(

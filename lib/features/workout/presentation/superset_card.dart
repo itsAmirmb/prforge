@@ -14,12 +14,8 @@ import 'workout_providers.dart';
 /// A superset in a session: one card, sets grouped by round, every member's
 /// set of the round listed in the planned order.
 class SupersetCard extends ConsumerWidget {
-  const SupersetCard({
-    super.key,
-    required this.sessionId,
-    required this.entry,
-    this.dragIndex,
-  });
+  const SupersetCard(
+      {super.key, required this.sessionId, required this.entry, this.dragIndex});
 
   final int sessionId;
   final SupersetEntry entry;
@@ -63,25 +59,20 @@ class SupersetCard extends ConsumerWidget {
             const SizedBox(height: 2),
             for (final m in entry.members) ...[
               LastSessionsHint(
-                exercise: m.exercise,
-                showName: true,
-                currentWeight: heaviestWeight(m.sets),
-              ),
+                  exercise: m.exercise,
+                  showName: true,
+                  currentWeight: heaviestWeight(m.sets)),
               ExerciseNotes(
-                exercise: m.exercise,
-                prescriptionId: m.prescriptionId,
-                showName: true,
-              ),
+                  exercise: m.exercise,
+                  prescriptionId: m.prescriptionId,
+                  showName: true),
             ],
             for (var r = 0; r < rounds.length; r++) ...[
               Padding(
                 padding: const EdgeInsets.only(top: 10, bottom: 2),
-                child: Text(
-                  'Round ${r + 1}',
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
+                child: Text('Round ${r + 1}',
+                    style: theme.textTheme.labelLarge
+                        ?.copyWith(color: theme.colorScheme.primary)),
               ),
               for (final m in entry.members)
                 if (entry.setInRound(m, rounds[r]) case final set?)
@@ -109,21 +100,16 @@ class SupersetCard extends ConsumerWidget {
                       if (m.sets.every((s) => s.isCompleted)) {
                         ScaffoldMessenger.of(context)
                           ..clearSnackBars()
-                          ..showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'All sets of this exercise are done.',
-                              ),
-                            ),
-                          );
+                          ..showSnackBar(const SnackBar(
+                              content:
+                                  Text('All sets of this exercise are done.')));
                         return;
                       }
                       await showProgressiveLoadingSheet(
                         context,
                         sessionId: sessionId,
                         block: m,
-                        last:
-                            ref
+                        last: ref
                                 .read(lastPerformanceProvider(m.exercise.id))
                                 .value ??
                             const [],

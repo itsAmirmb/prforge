@@ -23,11 +23,9 @@ class _ProgramListScreenState extends ConsumerState<ProgramListScreen> {
     if (name == null) return;
     final id = await ref.read(programRepositoryProvider).add(name);
     if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ProgramDetailScreen(programId: id),
-      ),
-    );
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => ProgramDetailScreen(programId: id),
+    ));
   }
 
   Future<void> _setArchived(Program p, bool archived) async {
@@ -36,17 +34,13 @@ class _ProgramListScreenState extends ConsumerState<ProgramListScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            archived ? '"${p.name}" archived' : '"${p.name}" restored',
-          ),
-          action: SnackBarAction(
-            label: 'Undo',
-            onPressed: () => repo.setArchived(p.id, !archived),
-          ),
+      ..showSnackBar(SnackBar(
+        content: Text(archived ? '"${p.name}" archived' : '"${p.name}" restored'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () => repo.setArchived(p.id, !archived),
         ),
-      );
+      ));
   }
 
   @override
@@ -59,9 +53,9 @@ class _ProgramListScreenState extends ConsumerState<ProgramListScreen> {
         actions: [
           IconButton(
             tooltip: _showArchived ? 'Show active' : 'Show archived',
-            icon: Icon(
-              _showArchived ? Icons.list_alt : Icons.inventory_2_outlined,
-            ),
+            icon: Icon(_showArchived
+                ? Icons.list_alt
+                : Icons.inventory_2_outlined),
             onPressed: () => setState(() => _showArchived = !_showArchived),
           ),
         ],
@@ -82,31 +76,23 @@ class _ProgramListScreenState extends ConsumerState<ProgramListScreen> {
           }
           return ListView.builder(
             padding: const EdgeInsets.only(
-              top: AppSpacing.sm,
-              bottom: AppSpacing.fabClearance,
-            ),
+                top: AppSpacing.sm, bottom: AppSpacing.fabClearance),
             itemCount: list.length,
             itemBuilder: (context, i) {
               final p = list[i];
               return Card(
                 child: ListTile(
                   leading: const IconBadge(icon: Icons.list_alt),
-                  title: Text(
-                    p.name,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => ProgramDetailScreen(programId: p.id),
-                    ),
-                  ),
+                  title: Text(p.name, style: Theme.of(context).textTheme.titleMedium),
+                  onTap: () =>
+                      Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => ProgramDetailScreen(programId: p.id),
+                  )),
                   trailing: IconButton(
                     tooltip: _showArchived ? 'Restore' : 'Archive',
-                    icon: Icon(
-                      _showArchived
-                          ? Icons.unarchive_outlined
-                          : Icons.archive_outlined,
-                    ),
+                    icon: Icon(_showArchived
+                        ? Icons.unarchive_outlined
+                        : Icons.archive_outlined),
                     onPressed: () => _setArchived(p, !_showArchived),
                   ),
                 ),

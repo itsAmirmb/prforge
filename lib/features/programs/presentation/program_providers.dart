@@ -14,19 +14,18 @@ final workoutDayRepositoryProvider = Provider<WorkoutDayRepository>(
 );
 
 /// Family key: true = archived programs, false = active ones.
-final programListProvider = StreamProvider.autoDispose
-    .family<List<Program>, bool>(
-      (ref, archived) => ref
-          .watch(programRepositoryProvider)
-          .watchPrograms(archived: archived),
-    );
+final programListProvider =
+    StreamProvider.autoDispose.family<List<Program>, bool>(
+  (ref, archived) =>
+      ref.watch(programRepositoryProvider).watchPrograms(archived: archived),
+);
 
 final programProvider = StreamProvider.autoDispose.family<Program?, int>(
   (ref, id) => ref.watch(programRepositoryProvider).watchProgram(id),
 );
 
-final workoutDaysProvider = StreamProvider.autoDispose
-    .family<List<WorkoutDay>, int>(
-      (ref, programId) =>
-          ref.watch(workoutDayRepositoryProvider).watchDays(programId),
-    );
+final workoutDaysProvider =
+    StreamProvider.autoDispose.family<List<WorkoutDay>, int>(
+  (ref, programId) =>
+      ref.watch(workoutDayRepositoryProvider).watchDays(programId),
+);

@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// HapticFeedback and never throws: feedback must not break a workout.
 class FeedbackService {
   FeedbackService([MethodChannel? channel])
-    : _channel = channel ?? const MethodChannel(channelName);
+      : _channel = channel ?? const MethodChannel(channelName);
 
   static const channelName = 'prforge/feedback';
 
@@ -62,6 +62,40 @@ class FeedbackService {
     if (sound) await _beep();
   }
 
+  /// Asks the OS to play the rest-over beep/vibration and show a notification
+  /// at [endsAt], even with the screen off (a Dart timer does not run then).
+  /// Scheduling again replaces the previous alarm.
+  Future<void> scheduleRestEnd({
+    required DateTime endsAt,
+    required bool sound,
+    required bool vibration,
+    required String title,
+    required String body,
+  }) =>
+      _invokeQuietly('scheduleRestEnd', {
+        'atMillis': endsAt.millisecondsSinceEpoch,
+        'sound': sound,
+        'vibration': vibration,
+        'title': title,
+        'body': body,
+      });
+
+  Future<void> cancelRestEnd() => _invokeQuietly('cancelRestEnd');
+
+  /// Android 13+ asks before showing notifications; sound works without it.
+  Future<void> requestNotificationPermission() =>
+      _invokeQuietly('requestNotificationPermission');
+
+  Future<void> _invokeQuietly(String method, [Object? arguments]) async {
+    try {
+      await _channel.invokeMethod<void>(method, arguments);
+    } on MissingPluginException {
+      // Not supported here (tests, other platforms).
+    } on PlatformException {
+      // Ignore: feedback must never break a workout.
+    }
+  }
+
   Future<void> keepScreenOn(bool on) async {
     try {
       await _channel.invokeMethod<void>('keepScreenOn', on);
@@ -73,6 +107,4 @@ class FeedbackService {
   }
 }
 
-final feedbackServiceProvider = Provider<FeedbackService>(
-  (ref) => FeedbackService(),
-);
+final feedbackServiceProvider = Provider<FeedbackService>((ref) => FeedbackService());

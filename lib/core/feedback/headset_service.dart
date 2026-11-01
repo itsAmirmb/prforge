@@ -10,7 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Each press arrives here as one event on [triggers].
 class HeadsetService {
   HeadsetService([MethodChannel? channel])
-    : _channel = channel ?? const MethodChannel(channelName) {
+      : _channel = channel ?? const MethodChannel(channelName) {
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'trigger') _triggers.add(null);
     });
@@ -24,6 +24,4 @@ class HeadsetService {
   Stream<void> get triggers => _triggers.stream;
 }
 
-final headsetServiceProvider = Provider<HeadsetService>(
-  (ref) => HeadsetService(),
-);
+final headsetServiceProvider = Provider<HeadsetService>((ref) => HeadsetService());

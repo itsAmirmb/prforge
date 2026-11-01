@@ -30,16 +30,13 @@ class HistoryRepository {
   /// Completed sessions, newest first.
   Stream<List<SessionSummary>> watchCompleted() {
     final s = _db.workoutSessions;
-    final query =
-        _db.select(s).join([
-            leftOuterJoin(
-              _db.workoutDays,
-              _db.workoutDays.id.equalsExp(s.workoutDayId),
-            ),
-            leftOuterJoin(_db.programs, _db.programs.id.equalsExp(s.programId)),
-          ])
-          ..where(s.status.equalsValue(SessionStatus.completed))
-          ..orderBy([OrderingTerm.desc(s.startedAt), OrderingTerm.desc(s.id)]);
+    final query = _db.select(s).join([
+      leftOuterJoin(
+          _db.workoutDays, _db.workoutDays.id.equalsExp(s.workoutDayId)),
+      leftOuterJoin(_db.programs, _db.programs.id.equalsExp(s.programId)),
+    ])
+      ..where(s.status.equalsValue(SessionStatus.completed))
+      ..orderBy([OrderingTerm.desc(s.startedAt), OrderingTerm.desc(s.id)]);
 
     return query.watch().asyncMap((rows) async {
       if (rows.isEmpty) return const <SessionSummary>[];
@@ -66,13 +63,12 @@ class HistoryRepository {
   Future<Map<int, List<SetLog>>> _completedSetsBySession() async {
     final l = _db.setLogs;
     final s = _db.workoutSessions;
-    final rows =
-        await (_db.select(l).join([innerJoin(s, s.id.equalsExp(l.sessionId))])
-              ..where(
-                s.status.equalsValue(SessionStatus.completed) &
-                    l.isCompleted.equals(true),
-              ))
-            .get();
+    final rows = await (_db.select(l).join([
+      innerJoin(s, s.id.equalsExp(l.sessionId)),
+    ])
+          ..where(s.status.equalsValue(SessionStatus.completed) &
+              l.isCompleted.equals(true)))
+        .get();
     final map = <int, List<SetLog>>{};
     for (final r in rows) {
       final log = r.readTable(l);
@@ -85,15 +81,13 @@ class HistoryRepository {
     final m = _db.miniSetLogs;
     final l = _db.setLogs;
     final s = _db.workoutSessions;
-    final rows =
-        await (_db.select(m).join([
-              innerJoin(l, l.id.equalsExp(m.setLogId)),
-              innerJoin(s, s.id.equalsExp(l.sessionId)),
-            ])..where(
-              s.status.equalsValue(SessionStatus.completed) &
-                  l.isCompleted.equals(true),
-            ))
-            .get();
+    final rows = await (_db.select(m).join([
+      innerJoin(l, l.id.equalsExp(m.setLogId)),
+      innerJoin(s, s.id.equalsExp(l.sessionId)),
+    ])
+          ..where(s.status.equalsValue(SessionStatus.completed) &
+              l.isCompleted.equals(true)))
+        .get();
     final map = <int, List<MiniSetLog>>{};
     for (final r in rows) {
       final sessionId = r.readTable(l).sessionId;
@@ -106,13 +100,11 @@ class HistoryRepository {
   /// Returns false if the session does not exist or is not completed (an
   /// in-progress session is discarded from the workout screen instead).
   Future<bool> deleteCompleted(int sessionId) async {
-    final deleted =
-        await (_db.delete(_db.workoutSessions)..where(
-              (s) =>
-                  s.id.equals(sessionId) &
-                  s.status.equalsValue(SessionStatus.completed),
-            ))
-            .go();
+    final deleted = await (_db.delete(_db.workoutSessions)
+          ..where((s) =>
+              s.id.equals(sessionId) &
+              s.status.equalsValue(SessionStatus.completed)))
+        .go();
     return deleted > 0;
   }
 }
