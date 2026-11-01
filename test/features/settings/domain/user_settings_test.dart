@@ -41,4 +41,17 @@ void main() {
     expect(bad.plateauWeeks, 2);
     expect(bad.plateauSessions, 3);
   });
+
+  test('voice announcements: reps and name on, weight off by default', () {
+    final d = UserSettings.fromMap(const {});
+    expect(d.speakReps, isTrue);
+    expect(d.speakWeight, isFalse);
+    expect(d.speakExerciseName, isTrue);
+    final custom = UserSettings.fromMap({
+      SettingKeys.speakReps: 'false',
+      SettingKeys.speakWeight: 'true',
+    });
+    expect(custom.speakReps, isFalse);
+    expect(custom.speakWeight, isTrue);
+  });
 }

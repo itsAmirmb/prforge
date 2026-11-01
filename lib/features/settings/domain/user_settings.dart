@@ -13,6 +13,9 @@ abstract final class SettingKeys {
   static const showExerciseClock = 'showExerciseClock';
   static const showSetClock = 'showSetClock';
   static const plateauHint = 'plateauHint';
+  static const speakReps = 'speakReps';
+  static const speakWeight = 'speakWeight';
+  static const speakExerciseName = 'speakExerciseName';
   static const plateauWeeks = 'plateauWeeks';
   static const plateauSessions = 'plateauSessions';
 }
@@ -36,6 +39,9 @@ class UserSettings {
     this.showExerciseClock = true,
     this.showSetClock = true,
     this.plateauHint = true,
+    this.speakReps = true,
+    this.speakWeight = false,
+    this.speakExerciseName = true,
     this.plateauWeeks = 2,
     this.plateauSessions = 3,
   });
@@ -61,6 +67,12 @@ class UserSettings {
   /// weight was unchanged for at least [plateauWeeks] weeks and
   /// [plateauSessions] sessions.
   final bool plateauHint;
+
+  /// What is spoken when a rest is over: the next set's reps and weight, and
+  /// the exercise name when the next set is a different exercise.
+  final bool speakReps;
+  final bool speakWeight;
+  final bool speakExerciseName;
   final int plateauWeeks;
   final int plateauSessions;
 
@@ -89,6 +101,9 @@ class UserSettings {
       showExerciseClock: flag(SettingKeys.showExerciseClock, true),
       showSetClock: flag(SettingKeys.showSetClock, true),
       plateauHint: flag(SettingKeys.plateauHint, true),
+      speakReps: flag(SettingKeys.speakReps, true),
+      speakWeight: flag(SettingKeys.speakWeight, false),
+      speakExerciseName: flag(SettingKeys.speakExerciseName, true),
       plateauWeeks: inRange(SettingKeys.plateauWeeks, minPlateauWeeks,
           maxPlateauWeeks, 2),
       plateauSessions: inRange(SettingKeys.plateauSessions,

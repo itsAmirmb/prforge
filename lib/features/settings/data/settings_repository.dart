@@ -47,6 +47,15 @@ class SettingsRepository {
       SettingKeys.plateauSessions,
       sessions.clamp(minPlateauSessions, maxPlateauSessions).toString());
 
+  Future<void> setSpeakReps(bool on) =>
+      _put(SettingKeys.speakReps, on.toString());
+
+  Future<void> setSpeakWeight(bool on) =>
+      _put(SettingKeys.speakWeight, on.toString());
+
+  Future<void> setSpeakExerciseName(bool on) =>
+      _put(SettingKeys.speakExerciseName, on.toString());
+
   Future<void> setThemeMode(ThemeMode mode) =>
       _put(SettingKeys.themeMode, mode.name);
 }

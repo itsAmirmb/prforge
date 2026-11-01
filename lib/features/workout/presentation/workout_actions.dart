@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/feedback/feedback_service.dart';
+import '../../../core/feedback/speech_service.dart';
 import '../../settings/presentation/settings_providers.dart';
+import '../domain/rest_announcement.dart';
 import '../domain/set_order.dart';
 import 'rest_timer_state.dart';
 import 'workout_providers.dart';
@@ -41,6 +43,55 @@ class WorkoutActions {
     _ref
         .read(feedbackServiceProvider)
         .setDoneAudible(sound: _ref.read(userSettingsProvider).sound);
+  }
+
+  /// Speaks the next set when a rest is over (see Settings > Voice).
+  Future<void> announceNext() async {
+    final settings = _ref.read(userSettingsProvider);
+    if (!(settings.speakReps ||
+        settings.speakWeight ||
+        settings.speakExerciseName)) {
+      return;
+    }
+    final session =
+        await _ref.read(sessionRepositoryProvider).findActiveSession();
+    if (session == null) return;
+    final entries =
+        await _ref.read(sessionEntriesProvider(session.id).future);
+    final ordered = performingOrder(entries);
+    final nextId = currentSetIdOf(ordered);
+    if (nextId == null) return;
+    final next = ordered.firstWhere((s) => s.id == nextId);
+
+    SetLog? previous;
+    for (final s in ordered) {
+      final t = s.completedAt;
+      if (!s.isCompleted || t == null) continue;
+      final p = previous?.completedAt;
+      if (p == null || t.isAfter(p)) previous = s;
+    }
+    final name = [
+      for (final e in entries)
+        for (final b in e.blocks)
+          if (b.exercise.id == next.exerciseId) b.exercise.name,
+    ].firstOrNull;
+    if (name == null) return;
+
+    final speech = _ref.read(speechServiceProvider);
+    final utterances = buildAnnouncement(
+      exerciseName: name,
+      exerciseChanged: previous == null || previous.exerciseId != next.exerciseId,
+      weightKg: next.weightKg,
+      reps: next.reps,
+      sayName: settings.speakExerciseName,
+      sayWeight: settings.speakWeight,
+      sayReps: settings.speakReps,
+      persianAvailable:
+          settings.speakExerciseName ? await speech.persianAvailable : false,
+    );
+    // Let the rest-over beep finish first.
+    if (settings.sound) await Future<void>.delayed(const Duration(milliseconds: 600));
+    await speech.speakAll(utterances);
   }
 }
 

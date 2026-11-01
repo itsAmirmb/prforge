@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/feedback/feedback_service.dart';
 import '../../settings/presentation/settings_providers.dart';
 import 'rest_timer_state.dart';
+import 'workout_actions.dart';
 
 String formatRest(Duration d) {
   final seconds = d.inSeconds < 0 ? 0 : d.inSeconds;
@@ -15,7 +16,8 @@ String formatRest(Duration d) {
 }
 
 /// Bottom bar of the workout screen: counts down the rest after a set, with
-/// -15s / +15s / skip. Vibrates and beeps when the rest is over.
+/// -15s / +15s / skip. Vibrates, beeps and speaks the next set when the rest
+/// is over.
 class RestTimerBar extends ConsumerStatefulWidget {
   const RestTimerBar({super.key});
 
@@ -46,6 +48,7 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
       ref.read(feedbackServiceProvider).restOver(
           sound: settings.sound, vibration: settings.vibration);
       ref.read(restTimerProvider.notifier).stop();
+      ref.read(workoutActionsProvider).announceNext();
     } else if (mounted) {
       setState(() {});
     }

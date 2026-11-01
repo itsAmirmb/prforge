@@ -14,6 +14,8 @@ import '../../programs/domain/program_template.dart';
 import '../../programs/domain/program_template_guide.dart';
 import '../../../app/providers.dart';
 import '../../../core/feedback/feedback_service.dart';
+import '../../../core/feedback/speech_service.dart';
+import '../../workout/domain/rest_announcement.dart';
 import '../domain/user_settings.dart';
 import 'settings_providers.dart';
 import '../../workout/presentation/rest_timer_bar.dart' show formatRest;
@@ -110,6 +112,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _testVoice() async {
+    final speech = ref.read(speechServiceProvider);
+    final persian = await speech.persianAvailable;
+    if (!persian) {
+      _say('No Persian voice on this phone: Persian exercise names will not '
+          'be read. Install one in the phone\'s text-to-speech settings.');
+    }
+    await speech.speakAll(buildAnnouncement(
+      exerciseName: 'پرس سینه',
+      exerciseChanged: true,
+      weightKg: 60,
+      reps: 10,
+      sayName: true,
+      sayWeight: true,
+      sayReps: true,
+      persianAvailable: persian,
+    ));
+  }
+
   Future<void> _copyFormat() async {
     await Clipboard.setData(const ClipboardData(text: programTemplateGuide));
     _say('File format and sample copied.');
@@ -174,6 +195,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             subtitle: const Text('While a workout is open'),
             value: settings.keepScreenOn,
             onChanged: ref.read(settingsRepositoryProvider).setKeepScreenOn,
+          ),
+          const _SectionTitle('Voice'),
+          SwitchListTile(
+            secondary: const Icon(Icons.record_voice_over_outlined),
+            title: const Text('Say reps'),
+            subtitle: const Text('When the rest is over, e.g. "10 reps"'),
+            value: settings.speakReps,
+            onChanged: ref.read(settingsRepositoryProvider).setSpeakReps,
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.fitness_center),
+            title: const Text('Say weight'),
+            subtitle: const Text('e.g. "60 kilos"'),
+            value: settings.speakWeight,
+            onChanged: ref.read(settingsRepositoryProvider).setSpeakWeight,
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.badge_outlined),
+            title: const Text('Say exercise name'),
+            subtitle: const Text('When the next set is a different exercise'),
+            value: settings.speakExerciseName,
+            onChanged:
+                ref.read(settingsRepositoryProvider).setSpeakExerciseName,
+          ),
+          ListTile(
+            leading: const Icon(Icons.play_circle_outline),
+            title: const Text('Test voice'),
+            subtitle:
+                const Text('Checks whether this phone can speak Persian'),
+            onTap: _testVoice,
           ),
           const _SectionTitle('Workout timers'),
           SwitchListTile(
