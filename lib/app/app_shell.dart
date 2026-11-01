@@ -11,6 +11,7 @@ import '../features/settings/presentation/settings_screen.dart';
 import '../features/workout/presentation/workout_actions.dart';
 import '../features/workout/presentation/workout_providers.dart';
 import '../features/workout/presentation/workout_session_screen.dart';
+import 'theme.dart';
 
 /// Bottom navigation between the top-level sections, plus a "Resume workout"
 /// bar whenever a session is in progress.
@@ -29,8 +30,10 @@ class _AppShellState extends ConsumerState<AppShell> {
   void initState() {
     super.initState();
     // Headset button long-press: tick the current set of the active workout.
-    _headsetSub = ref.read(headsetServiceProvider).triggers.listen(
-        (_) => ref.read(workoutActionsProvider).completeCurrentSet());
+    _headsetSub = ref
+        .read(headsetServiceProvider)
+        .triggers
+        .listen((_) => ref.read(workoutActionsProvider).completeCurrentSet());
   }
 
   @override
@@ -56,33 +59,102 @@ class _AppShellState extends ConsumerState<AppShell> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (active != null)
-            Material(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              child: ListTile(
-                dense: true,
-                leading: const Icon(Icons.fitness_center),
-                title: const Text('Workout in progress'),
-                trailing: const Text('Resume'),
-                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                  builder: (_) => WorkoutSessionScreen(sessionId: active.id),
-                )),
-              ),
-            ),
+          AnimatedSize(
+            duration: AppMotion.of(context, AppMotion.medium),
+            curve: AppMotion.curve,
+            alignment: Alignment.bottomCenter,
+            child: active == null
+                ? const SizedBox(width: double.infinity)
+                : _ResumeBar(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            WorkoutSessionScreen(sessionId: active.id),
+                      ),
+                    ),
+                  ),
+          ),
           NavigationBar(
             selectedIndex: _index,
             onDestinationSelected: (i) => setState(() => _index = i),
             destinations: const [
               NavigationDestination(
-                  icon: Icon(Icons.list_alt), label: 'Programs'),
-              NavigationDestination(icon: Icon(Icons.history), label: 'History'),
+                icon: Icon(Icons.list_alt_outlined),
+                selectedIcon: Icon(Icons.list_alt),
+                label: 'Programs',
+              ),
               NavigationDestination(
-                  icon: Icon(Icons.fitness_center), label: 'Exercises'),
+                icon: Icon(Icons.history),
+                selectedIcon: Icon(Icons.history_toggle_off),
+                label: 'History',
+              ),
               NavigationDestination(
-                  icon: Icon(Icons.settings), label: 'Settings'),
+                icon: Icon(Icons.fitness_center_outlined),
+                selectedIcon: Icon(Icons.fitness_center),
+                label: 'Exercises',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings),
+                label: 'Settings',
+              ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// "Workout in progress" bar above the navigation bar; tap to resume.
+class _ResumeBar extends StatelessWidget {
+  const _ResumeBar({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      child: Material(
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 56),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Row(
+                children: [
+                  Icon(Icons.fitness_center, color: scheme.onPrimaryContainer),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      'Workout in progress',
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(color: scheme.onPrimaryContainer),
+                    ),
+                  ),
+                  Text(
+                    'Resume',
+                    style: Theme.of(context).textTheme.labelLarge
+                        ?.copyWith(color: scheme.onPrimaryContainer),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(Icons.chevron_right, color: scheme.onPrimaryContainer),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

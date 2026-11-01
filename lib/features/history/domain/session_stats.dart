@@ -10,8 +10,12 @@ class SessionStats {
     required this.volumeKg,
   });
 
-  static const empty =
-      SessionStats(exerciseCount: 0, setCount: 0, totalReps: 0, volumeKg: 0);
+  static const empty = SessionStats(
+    exerciseCount: 0,
+    setCount: 0,
+    totalReps: 0,
+    volumeKg: 0,
+  );
 
   final int exerciseCount;
 
@@ -26,7 +30,9 @@ class SessionStats {
 }
 
 SessionStats computeSessionStats(
-    Iterable<SetLog> sets, Iterable<MiniSetLog> miniSets) {
+  Iterable<SetLog> sets,
+  Iterable<MiniSetLog> miniSets,
+) {
   var setCount = 0;
   var reps = 0;
   var volume = 0.0;

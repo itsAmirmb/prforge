@@ -27,8 +27,9 @@ class _ExerciseFormSheetState extends ConsumerState<ExerciseFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late final _name = TextEditingController(text: widget.exercise?.name);
   late final _category = TextEditingController(text: widget.exercise?.category);
-  late final _equipment =
-      TextEditingController(text: widget.exercise?.equipment);
+  late final _equipment = TextEditingController(
+    text: widget.exercise?.equipment,
+  );
   late final _notes = TextEditingController(text: widget.exercise?.notes);
   late bool _isBodyweight = widget.exercise?.isBodyweight ?? false;
 
@@ -91,17 +92,21 @@ class _ExerciseFormSheetState extends ConsumerState<ExerciseFormSheet> {
               ),
               TextFormField(
                 controller: _category,
-                decoration:
-                    const InputDecoration(labelText: 'Category (optional)'),
+                decoration: const InputDecoration(
+                  labelText: 'Category (optional)',
+                ),
               ),
               TextFormField(
                 controller: _equipment,
-                decoration:
-                    const InputDecoration(labelText: 'Equipment (optional)'),
+                decoration: const InputDecoration(
+                  labelText: 'Equipment (optional)',
+                ),
               ),
               TextFormField(
                 controller: _notes,
-                decoration: const InputDecoration(labelText: 'Notes (optional)'),
+                decoration: const InputDecoration(
+                  labelText: 'Notes (optional)',
+                ),
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -112,7 +117,10 @@ class _ExerciseFormSheetState extends ConsumerState<ExerciseFormSheet> {
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
-                child: FilledButton(onPressed: _save, child: const Text('Save')),
+                child: FilledButton(
+                  onPressed: _save,
+                  child: const Text('Save'),
+                ),
               ),
             ],
           ),

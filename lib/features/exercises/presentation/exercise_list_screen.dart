@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../app/theme.dart';
+import '../../../core/widgets/state_views.dart';
 import '../../progress/presentation/exercise_progress_screen.dart';
 import 'exercise_form_sheet.dart';
 import 'exercise_providers.dart';
@@ -24,7 +26,9 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
-          content: Text(archived ? '"${e.name}" archived' : '"${e.name}" restored'),
+          content: Text(
+            archived ? '"${e.name}" archived' : '"${e.name}" restored',
+          ),
           action: SnackBarAction(
             label: 'Undo',
             onPressed: () => repo.setArchived(e.id, !archived),
@@ -43,27 +47,31 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
         actions: [
           IconButton(
             tooltip: _showArchived ? 'Show active' : 'Show archived',
-            icon: Icon(_showArchived
-                ? Icons.fitness_center
-                : Icons.inventory_2_outlined),
+            icon: Icon(
+              _showArchived ? Icons.fitness_center : Icons.inventory_2_outlined,
+            ),
             onPressed: () => setState(() => _showArchived = !_showArchived),
           ),
         ],
       ),
       body: exercises.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => const LoadingState(),
+        error: (e, _) => ErrorState(e),
         data: (list) {
           if (list.isEmpty) {
-            return Center(
-              child: Text(_showArchived
+            return EmptyState(
+              icon: Icons.fitness_center,
+              message: _showArchived
                   ? 'No archived exercises'
-                  : 'No exercises yet. Tap + to add one.'),
+                  : 'No exercises yet. Tap + to add one.',
             );
           }
-          return ListView.separated(
+          return ListView.builder(
+            padding: const EdgeInsets.only(
+              top: AppSpacing.sm,
+              bottom: AppSpacing.fabClearance,
+            ),
             itemCount: list.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, i) {
               final e = list[i];
               final subtitle = [
@@ -71,29 +79,37 @@ class _ExerciseListScreenState extends ConsumerState<ExerciseListScreen> {
                 if (e.equipment != null) e.equipment!,
                 if (e.isBodyweight) 'Bodyweight',
               ].join(' · ');
-              return ListTile(
-                title: Text(e.name),
-                subtitle: subtitle.isEmpty ? null : Text(subtitle),
-                onTap: () => showExerciseForm(context, exercise: e),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      tooltip: 'Progress',
-                      icon: const Icon(Icons.show_chart),
-                      onPressed: () =>
-                          Navigator.of(context).push(MaterialPageRoute<void>(
-                        builder: (_) => ExerciseProgressScreen(exercise: e),
-                      )),
-                    ),
-                    IconButton(
-                      tooltip: _showArchived ? 'Restore' : 'Archive',
-                      icon: Icon(_showArchived
-                          ? Icons.unarchive_outlined
-                          : Icons.archive_outlined),
-                      onPressed: () => _setArchived(e, !_showArchived),
-                    ),
-                  ],
+              return Card(
+                child: ListTile(
+                  title: Text(
+                    e.name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  subtitle: subtitle.isEmpty ? null : Text(subtitle),
+                  onTap: () => showExerciseForm(context, exercise: e),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Progress',
+                        icon: const Icon(Icons.show_chart),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => ExerciseProgressScreen(exercise: e),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: _showArchived ? 'Restore' : 'Archive',
+                        icon: Icon(
+                          _showArchived
+                              ? Icons.unarchive_outlined
+                              : Icons.archive_outlined,
+                        ),
+                        onPressed: () => _setArchived(e, !_showArchived),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },

@@ -32,7 +32,9 @@ EntryClock? entryClock({
   final start = timing?.start ?? entryStart(entry, allSets, sessionStart, now);
   final elapsed = now.difference(start);
   return EntryClock(
-      elapsed: elapsed.isNegative ? Duration.zero : elapsed, running: true);
+    elapsed: elapsed.isNegative ? Duration.zero : elapsed,
+    running: true,
+  );
 }
 
 /// Time of one [set]: from the end of the previous completed set of the
@@ -48,12 +50,19 @@ EntryClock? setClock({
 }) {
   final doneAt = set.isCompleted ? set.completedAt : null;
   if (isCurrent) {
-    final elapsed = now.difference(startBefore({set.id}, allSets, sessionStart, now));
+    final elapsed = now.difference(
+      startBefore({set.id}, allSets, sessionStart, now),
+    );
     return EntryClock(
-        elapsed: elapsed.isNegative ? Duration.zero : elapsed, running: true);
+      elapsed: elapsed.isNegative ? Duration.zero : elapsed,
+      running: true,
+    );
   }
   if (doneAt == null) return null;
   return EntryClock(
-      elapsed: doneAt.difference(startBefore({set.id}, allSets, sessionStart, doneAt)),
-      running: false);
+    elapsed: doneAt.difference(
+      startBefore({set.id}, allSets, sessionStart, doneAt),
+    ),
+    running: false,
+  );
 }

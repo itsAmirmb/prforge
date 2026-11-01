@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../app/theme.dart';
+import '../../../core/widgets/state_views.dart';
 import '../../workout/presentation/workout_providers.dart';
 import '../../workout/presentation/workout_session_screen.dart';
 import '../data/prescription_repository.dart';
@@ -16,9 +18,11 @@ class WorkoutDayScreen extends ConsumerWidget {
   final WorkoutDay day;
 
   void _openSession(BuildContext context, int sessionId) {
-    Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => WorkoutSessionScreen(sessionId: sessionId),
-    ));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => WorkoutSessionScreen(sessionId: sessionId),
+      ),
+    );
   }
 
   Future<void> _start(BuildContext context, WidgetRef ref) async {
@@ -31,7 +35,8 @@ class WorkoutDayScreen extends ConsumerWidget {
         builder: (ctx) => AlertDialog(
           title: const Text('Workout in progress'),
           content: const Text(
-              'Finish or discard the current workout before starting a new one.'),
+            'Finish or discard the current workout before starting a new one.',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
@@ -55,36 +60,43 @@ class WorkoutDayScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(dayPrescriptionsProvider(day.id));
     final groups = {
-      for (final g in ref.watch(daySupersetGroupsProvider(day.id)).value ??
-          const <SupersetGroup>[])
+      for (final g
+          in ref.watch(daySupersetGroupsProvider(day.id)).value ??
+              const <SupersetGroup>[])
         g.id: g,
     };
 
     return Scaffold(
       appBar: AppBar(title: Text(day.name)),
       body: items.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => const LoadingState(),
+        error: (e, _) => ErrorState(e),
         data: (list) {
           if (list.isEmpty) {
-            return const Center(
-                child: Text('No exercises yet. Tap + to add one.'));
+            return const EmptyState(
+              icon: Icons.fitness_center,
+              message: 'No exercises yet. Tap + to add one.',
+            );
           }
-          final entries =
-              toEntries(list, (i) => i.prescription.supersetGroupId);
+          final entries = toEntries(
+            list,
+            (i) => i.prescription.supersetGroupId,
+          );
           String keyOf(List<PrescriptionWithExercise> e) =>
               e.first.prescription.supersetGroupId != null
-                  ? 'g${e.first.prescription.supersetGroupId}'
-                  : 'p${e.first.prescription.id}';
+              ? 'g${e.first.prescription.supersetGroupId}'
+              : 'p${e.first.prescription.id}';
 
           return ReorderableListView.builder(
+            padding: const EdgeInsets.only(
+              top: AppSpacing.sm,
+              bottom: AppSpacing.fabClearance,
+            ),
             itemCount: entries.length,
             onReorderItem: (oldIndex, newIndex) {
               final keys = [for (final e in entries) keyOf(e)];
               keys.insert(newIndex, keys.removeAt(oldIndex));
-              ref
-                  .read(supersetRepositoryProvider)
-                  .reorderEntries(day.id, keys);
+              ref.read(supersetRepositoryProvider).reorderEntries(day.id, keys);
             },
             itemBuilder: (context, i) {
               final entry = entries[i];
@@ -100,7 +112,8 @@ class WorkoutDayScreen extends ConsumerWidget {
                 );
               }
               final next = i + 1 < entries.length ? entries[i + 1] : null;
-              final nextIsSingle = next != null &&
+              final nextIsSingle =
+                  next != null &&
                   next.length == 1 &&
                   next.first.prescription.supersetGroupId == null;
               return SinglePrescriptionTile(
@@ -118,7 +131,12 @@ class WorkoutDayScreen extends ConsumerWidget {
           ? null
           : SafeArea(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                ),
                 child: FilledButton.icon(
                   icon: const Icon(Icons.play_arrow),
                   label: const Text('Start workout'),

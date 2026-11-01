@@ -45,8 +45,9 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
     if (timer == null) return;
     if (timer.remaining() <= Duration.zero) {
       final settings = ref.read(userSettingsProvider);
-      ref.read(feedbackServiceProvider).restOver(
-          sound: settings.sound, vibration: settings.vibration);
+      ref
+          .read(feedbackServiceProvider)
+          .restOver(sound: settings.sound, vibration: settings.vibration);
       ref.read(restTimerProvider.notifier).stop();
       ref.read(workoutActionsProvider).announceNext();
     } else if (mounted) {
@@ -67,9 +68,12 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
 
     final notifier = ref.read(restTimerProvider.notifier);
     final remaining = timer.remaining();
-    final progress =
-        (remaining.inMilliseconds / (timer.totalSeconds * 1000)).clamp(0.0, 1.0);
+    final progress = (remaining.inMilliseconds / (timer.totalSeconds * 1000))
+        .clamp(0.0, 1.0);
     final theme = Theme.of(context);
+    final onBar = TextButton.styleFrom(
+      foregroundColor: theme.colorScheme.onPrimaryContainer,
+    );
 
     return Material(
       color: theme.colorScheme.primaryContainer,
@@ -79,18 +83,34 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
           padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
           child: Row(
             children: [
-              Text('Rest ${formatRest(remaining + const Duration(milliseconds: 999))}',
-                  style: theme.textTheme.titleMedium),
+              Text(
+                'Rest ${formatRest(remaining + const Duration(milliseconds: 999))}',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: theme.colorScheme.onPrimaryContainer,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
               const SizedBox(width: 12),
-              Expanded(child: LinearProgressIndicator(value: progress)),
+              Expanded(
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 6,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
               TextButton(
-                  onPressed: () => notifier.adjust(-15),
-                  child: const Text('−15s')),
+                style: onBar,
+                onPressed: () => notifier.adjust(-15),
+                child: const Text('−15s'),
+              ),
               TextButton(
-                  onPressed: () => notifier.adjust(15),
-                  child: const Text('+15s')),
+                style: onBar,
+                onPressed: () => notifier.adjust(15),
+                child: const Text('+15s'),
+              ),
               IconButton(
                 tooltip: 'Skip rest',
+                color: theme.colorScheme.onPrimaryContainer,
                 icon: const Icon(Icons.close),
                 onPressed: notifier.stop,
               ),

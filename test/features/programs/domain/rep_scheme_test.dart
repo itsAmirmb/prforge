@@ -9,7 +9,10 @@ void main() {
       expect(parseRepScheme(formatRepScheme([5])), [5]);
     });
 
-    test('tolerates spaces', () => expect(parseRepScheme(' 12 , 10 '), [12, 10]));
+    test(
+      'tolerates spaces',
+      () => expect(parseRepScheme(' 12 , 10 '), [12, 10]),
+    );
 
     test('empty or invalid gives null', () {
       expect(parseRepScheme(null), isNull);

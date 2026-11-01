@@ -5,25 +5,25 @@ import 'package:prforge/core/database/app_database.dart';
 import 'package:prforge/features/programs/domain/program_template.dart';
 
 Map<String, dynamic> valid() => {
-      'format': programTemplateFormat,
-      'version': 1,
-      'name': 'P',
-      'days': [
+  'format': programTemplateFormat,
+  'version': 1,
+  'name': 'P',
+  'days': [
+    {
+      'name': 'D',
+      'entries': [
+        {'exercise': 'Bench', 'sets': 4, 'reps': 8, 'weightKg': 60},
         {
-          'name': 'D',
-          'entries': [
-            {'exercise': 'Bench', 'sets': 4, 'reps': 8, 'weightKg': 60},
-            {
-              'rounds': 3,
-              'superset': [
-                {'exercise': 'A', 'reps': 12},
-                {'exercise': 'B', 'reps': 10, 'notes': ' x '},
-              ],
-            },
+          'rounds': 3,
+          'superset': [
+            {'exercise': 'A', 'reps': 12},
+            {'exercise': 'B', 'reps': 10, 'notes': ' x '},
           ],
         },
       ],
-    };
+    },
+  ],
+};
 
 ProgramTemplate parse(Map<String, dynamic> m) =>
     parseProgramTemplate(jsonEncode(m));
@@ -56,8 +56,10 @@ void main() {
   });
 
   test('rejects broken files', () {
-    expect(() => parseProgramTemplate('nope'),
-        throwsA(isA<ProgramTemplateException>()));
+    expect(
+      () => parseProgramTemplate('nope'),
+      throwsA(isA<ProgramTemplateException>()),
+    );
     expectInvalid({'format': 'other'});
     expectInvalid({...valid(), 'version': 2});
     expectInvalid({...valid(), 'days': []});

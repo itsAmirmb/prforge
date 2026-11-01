@@ -28,8 +28,9 @@ class SyncedNumberField extends StatefulWidget {
 }
 
 class _SyncedNumberFieldState extends State<SyncedNumberField> {
-  late final _controller =
-      TextEditingController(text: formatWeight(widget.value));
+  late final _controller = TextEditingController(
+    text: formatWeight(widget.value),
+  );
   final _focus = FocusNode();
 
   static double? _parse(String text) =>
@@ -63,11 +64,7 @@ class _SyncedNumberFieldState extends State<SyncedNumberField> {
             ? FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
             : FilteringTextInputFormatter.digitsOnly,
       ],
-      decoration: InputDecoration(
-        labelText: widget.label,
-        isDense: true,
-        border: const OutlineInputBorder(),
-      ),
+      decoration: InputDecoration(labelText: widget.label),
       onChanged: (v) => widget.onChanged(_parse(v)),
     );
   }

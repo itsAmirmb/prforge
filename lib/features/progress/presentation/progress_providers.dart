@@ -8,8 +8,8 @@ final progressRepositoryProvider = Provider<ProgressRepository>(
   (ref) => ProgressRepository(ref.watch(databaseProvider)),
 );
 
-final exerciseProgressProvider =
-    StreamProvider.autoDispose.family<ExerciseProgress, int>(
-  (ref, exerciseId) =>
-      ref.watch(progressRepositoryProvider).watchExercise(exerciseId),
-);
+final exerciseProgressProvider = StreamProvider.autoDispose
+    .family<ExerciseProgress, int>(
+      (ref, exerciseId) =>
+          ref.watch(progressRepositoryProvider).watchExercise(exerciseId),
+    );

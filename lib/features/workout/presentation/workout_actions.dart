@@ -90,7 +90,9 @@ class WorkoutActions {
           settings.speakExerciseName ? await speech.persianAvailable : false,
     );
     // Let the rest-over beep finish first.
-    if (settings.sound) await Future<void>.delayed(const Duration(milliseconds: 600));
+    if (settings.sound) {
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+    }
     await speech.speakAll(utterances);
   }
 }

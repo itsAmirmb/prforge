@@ -17,9 +17,15 @@ Future<void> seed(AppDatabase db) async {
   final programId = await db
       .into(db.programs)
       .insert(ProgramsCompanion.insert(name: 'PPL'));
-  final dayId = await db.into(db.workoutDays).insert(
-      WorkoutDaysCompanion.insert(
-          programId: programId, name: 'Push', orderIndex: 0));
+  final dayId = await db
+      .into(db.workoutDays)
+      .insert(
+        WorkoutDaysCompanion.insert(
+          programId: programId,
+          name: 'Push',
+          orderIndex: 0,
+        ),
+      );
   final bench = await db
       .into(db.exercises)
       .insert(ExercisesCompanion.insert(name: 'Bench'));
@@ -29,10 +35,15 @@ Future<void> seed(AppDatabase db) async {
   final press = await db
       .into(db.exercises)
       .insert(ExercisesCompanion.insert(name: 'Press'));
-  final groupId = await db.into(db.supersetGroups).insert(
-      SupersetGroupsCompanion.insert(workoutDayId: dayId, orderIndex: 0));
-  await db.into(db.exercisePrescriptions).insert(
-      ExercisePrescriptionsCompanion.insert(
+  final groupId = await db
+      .into(db.supersetGroups)
+      .insert(
+        SupersetGroupsCompanion.insert(workoutDayId: dayId, orderIndex: 0),
+      );
+  await db
+      .into(db.exercisePrescriptions)
+      .insert(
+        ExercisePrescriptionsCompanion.insert(
           workoutDayId: dayId,
           exerciseId: bench,
           orderIndex: 0,
@@ -40,9 +51,13 @@ Future<void> seed(AppDatabase db) async {
           supersetOrder: const Value(0),
           targetSets: const Value(2),
           targetReps: const Value(8),
-          targetWeightKg: const Value(60)));
-  await db.into(db.exercisePrescriptions).insert(
-      ExercisePrescriptionsCompanion.insert(
+          targetWeightKg: const Value(60),
+        ),
+      );
+  await db
+      .into(db.exercisePrescriptions)
+      .insert(
+        ExercisePrescriptionsCompanion.insert(
           workoutDayId: dayId,
           exerciseId: fly,
           orderIndex: 1,
@@ -50,21 +65,27 @@ Future<void> seed(AppDatabase db) async {
           supersetOrder: const Value(1),
           targetSets: const Value(2),
           targetReps: const Value(12),
-          targetWeightKg: const Value(10)));
-  await db.into(db.exercisePrescriptions).insert(
-      ExercisePrescriptionsCompanion.insert(
+          targetWeightKg: const Value(10),
+        ),
+      );
+  await db
+      .into(db.exercisePrescriptions)
+      .insert(
+        ExercisePrescriptionsCompanion.insert(
           workoutDayId: dayId,
           exerciseId: press,
           orderIndex: 2,
           targetSets: const Value(1),
           targetReps: const Value(10),
           targetWeightKg: const Value(20),
-          setType: const Value(SetKind.restPause)));
+          setType: const Value(SetKind.restPause),
+        ),
+      );
 
   final id = await sessions.startSession(dayId);
-  final sets = await (db.select(db.setLogs)
-        ..where((l) => l.sessionId.equals(id)))
-      .get();
+  final sets = await (db.select(
+    db.setLogs,
+  )..where((l) => l.sessionId.equals(id))).get();
   for (final s in sets) {
     await sessions.setCompleted(s.id, true);
   }
@@ -74,7 +95,8 @@ Future<void> seed(AppDatabase db) async {
 }
 
 Map<String, dynamic> tablesOf(String json) =>
-    (jsonDecode(json) as Map<String, dynamic>)['tables'] as Map<String, dynamic>;
+    (jsonDecode(json) as Map<String, dynamic>)['tables']
+        as Map<String, dynamic>;
 
 void main() {
   late AppDatabase db;
@@ -110,8 +132,10 @@ void main() {
     expect(summary.exercises, 3);
     expect(summary.programs, 1);
     expect(summary.sessions, 1);
-    expect(tablesOf(await BackupRepository(other).exportJson()),
-        tablesOf(json));
+    expect(
+      tablesOf(await BackupRepository(other).exportJson()),
+      tablesOf(json),
+    );
   });
 
   test('restore replaces existing data', () async {
@@ -127,8 +151,7 @@ void main() {
     expect(names, unorderedEquals(['Bench', 'Fly', 'Press']));
   });
 
-  test('restored data keeps relations (superset, rest-pause, enums)',
-      () async {
+  test('restored data keeps relations (superset, rest-pause, enums)', () async {
     await seed(db);
     final json = await backup.exportJson();
     final other = AppDatabase(NativeDatabase.memory());
@@ -146,13 +169,17 @@ void main() {
   });
 
   test('settings are backed up and restored', () async {
-    await db.into(db.settingEntries).insert(
-        SettingEntriesCompanion.insert(key: 'restSeconds', value: '120'));
+    await db
+        .into(db.settingEntries)
+        .insert(
+          SettingEntriesCompanion.insert(key: 'restSeconds', value: '120'),
+        );
     final json = await backup.exportJson();
 
     await db.delete(db.settingEntries).go();
-    await db.into(db.settingEntries).insert(
-        SettingEntriesCompanion.insert(key: 'sound', value: 'false'));
+    await db
+        .into(db.settingEntries)
+        .insert(SettingEntriesCompanion.insert(key: 'sound', value: 'false'));
     await backup.restoreJson(json);
 
     final rows = await db.select(db.settingEntries).get();
@@ -162,8 +189,9 @@ void main() {
   test('an old backup without settings keeps the current settings', () async {
     final root = jsonDecode(await backup.exportJson()) as Map<String, dynamic>;
     (root['tables'] as Map<String, dynamic>).remove('settingEntries');
-    await db.into(db.settingEntries).insert(
-        SettingEntriesCompanion.insert(key: 'sound', value: 'false'));
+    await db
+        .into(db.settingEntries)
+        .insert(SettingEntriesCompanion.insert(key: 'sound', value: 'false'));
 
     await backup.restoreJson(jsonEncode(root));
 
@@ -181,7 +209,9 @@ void main() {
 
     Future<void> expectRejected(String text) async {
       await expectLater(
-          backup.restoreJson(text), throwsA(isA<BackupFormatException>()));
+        backup.restoreJson(text),
+        throwsA(isA<BackupFormatException>()),
+      );
       expect(tablesOf(await backup.exportJson()), tablesOf(before));
     }
 
@@ -210,7 +240,8 @@ void main() {
     test('damaged row', () async {
       final root = jsonDecode(before) as Map<String, dynamic>;
       ((root['tables'] as Map<String, dynamic>)['exercises'] as List)
-          .first['name'] = 123;
+              .first['name'] =
+          123;
       await expectRejected(jsonEncode(root));
     });
 
@@ -218,8 +249,12 @@ void main() {
       final root = jsonDecode(before) as Map<String, dynamic>;
       // A set that points to a session that is not in the file.
       ((root['tables'] as Map<String, dynamic>)['setLogs'] as List)
-          .first['sessionId'] = 9999;
-      await expectLater(backup.restoreJson(jsonEncode(root)), throwsA(anything));
+              .first['sessionId'] =
+          9999;
+      await expectLater(
+        backup.restoreJson(jsonEncode(root)),
+        throwsA(anything),
+      );
       expect(tablesOf(await backup.exportJson()), tablesOf(before));
     });
   });

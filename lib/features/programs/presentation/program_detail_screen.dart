@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../app/theme.dart';
 import '../../../core/widgets/name_dialog.dart';
+import '../../../core/widgets/state_views.dart';
 import '../data/workout_day_repository.dart';
 import 'program_providers.dart';
 import 'workout_day_screen.dart';
@@ -13,39 +15,59 @@ class ProgramDetailScreen extends ConsumerWidget {
   final int programId;
 
   Future<void> _renameProgram(
-      BuildContext context, WidgetRef ref, Program program) async {
-    final name = await showNameDialog(context,
-        title: 'Rename program', initial: program.name);
+    BuildContext context,
+    WidgetRef ref,
+    Program program,
+  ) async {
+    final name = await showNameDialog(
+      context,
+      title: 'Rename program',
+      initial: program.name,
+    );
     if (name != null) {
       await ref.read(programRepositoryProvider).rename(program.id, name);
     }
   }
 
   Future<void> _addDay(BuildContext context, WidgetRef ref) async {
-    final name = await showNameDialog(context,
-        title: 'New day', label: 'Day name (e.g. Push)');
+    final name = await showNameDialog(
+      context,
+      title: 'New day',
+      label: 'Day name (e.g. Push)',
+    );
     if (name != null) {
       await ref.read(workoutDayRepositoryProvider).add(programId, name);
     }
   }
 
   Future<void> _renameDay(
-      BuildContext context, WidgetRef ref, WorkoutDay day) async {
-    final name = await showNameDialog(context,
-        title: 'Rename day', initial: day.name, label: 'Day name');
+    BuildContext context,
+    WidgetRef ref,
+    WorkoutDay day,
+  ) async {
+    final name = await showNameDialog(
+      context,
+      title: 'Rename day',
+      initial: day.name,
+      label: 'Day name',
+    );
     if (name != null) {
       await ref.read(workoutDayRepositoryProvider).rename(day.id, name);
     }
   }
 
   Future<void> _deleteDay(
-      BuildContext context, WidgetRef ref, WorkoutDay day) async {
+    BuildContext context,
+    WidgetRef ref,
+    WorkoutDay day,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete day?'),
         content: Text(
-            '"${day.name}" and its planned exercises will be deleted. Logged workouts are not affected.'),
+          '"${day.name}" and its planned exercises will be deleted. Logged workouts are not affected.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -87,14 +109,20 @@ class ProgramDetailScreen extends ConsumerWidget {
         ],
       ),
       body: days.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => const LoadingState(),
+        error: (e, _) => ErrorState(e),
         data: (list) {
           if (list.isEmpty) {
-            return const Center(
-                child: Text('No days yet. Tap + to add one (e.g. Push, Pull, Legs).'));
+            return const EmptyState(
+              icon: Icons.calendar_view_day_outlined,
+              message: 'No days yet. Tap + to add one (e.g. Push, Pull, Legs).',
+            );
           }
           return ReorderableListView.builder(
+            padding: const EdgeInsets.only(
+              top: AppSpacing.sm,
+              bottom: AppSpacing.fabClearance,
+            ),
             itemCount: list.length,
             onReorderItem: (oldIndex, newIndex) {
               final ids = [for (final d in list) d.id];
@@ -103,29 +131,48 @@ class ProgramDetailScreen extends ConsumerWidget {
             },
             itemBuilder: (context, i) {
               final day = list[i];
-              return ListTile(
+              return Card(
                 key: ValueKey(day.id),
-                title: Text(day.name),
-                onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                  builder: (_) => WorkoutDayScreen(day: day),
-                )),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    PopupMenuButton<String>(
-                      onSelected: (v) => v == 'rename'
-                          ? _renameDay(context, ref, day)
-                          : _deleteDay(context, ref, day),
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'rename', child: Text('Rename')),
-                        PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      ],
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .primaryContainer,
+                    foregroundColor: Theme.of(context)
+                        .colorScheme
+                        .onPrimaryContainer,
+                    child: Text('${i + 1}'),
+                  ),
+                  title: Text(
+                    day.name,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => WorkoutDayScreen(day: day),
                     ),
-                    ReorderableDragStartListener(
-                      index: i,
-                      child: const Icon(Icons.drag_handle),
-                    ),
-                  ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      PopupMenuButton<String>(
+                        onSelected: (v) => v == 'rename'
+                            ? _renameDay(context, ref, day)
+                            : _deleteDay(context, ref, day),
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(value: 'rename', child: Text('Rename')),
+                          PopupMenuItem(value: 'delete', child: Text('Delete')),
+                        ],
+                      ),
+                      ReorderableDragStartListener(
+                        index: i,
+                        child: const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Icon(Icons.drag_handle),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },

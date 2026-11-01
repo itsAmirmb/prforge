@@ -74,7 +74,9 @@ class ProgramImporter {
 
       for (var d = 0; d < template.days.length; d++) {
         final day = template.days[d];
-        final dayId = await _db.into(_db.workoutDays).insert(
+        final dayId = await _db
+            .into(_db.workoutDays)
+            .insert(
               WorkoutDaysCompanion.insert(
                 programId: programId,
                 name: day.name,
@@ -84,9 +86,14 @@ class ProgramImporter {
         var index = 0; // prescription order
         var entry = 0; // entry order (a superset counts once)
 
-        Future<void> add(TemplateExercise e,
-            {int? groupId, int? groupOrder}) async {
-          await _db.into(_db.exercisePrescriptions).insert(
+        Future<void> add(
+          TemplateExercise e, {
+          int? groupId,
+          int? groupOrder,
+        }) async {
+          await _db
+              .into(_db.exercisePrescriptions)
+              .insert(
                 ExercisePrescriptionsCompanion.insert(
                   workoutDayId: dayId,
                   exerciseId: await exerciseId(e.name),
@@ -111,7 +118,9 @@ class ProgramImporter {
               await add(e);
               entry++;
             case TemplateSuperset():
-              final groupId = await _db.into(_db.supersetGroups).insert(
+              final groupId = await _db
+                  .into(_db.supersetGroups)
+                  .insert(
                     SupersetGroupsCompanion.insert(
                       workoutDayId: dayId,
                       orderIndex: entry++,

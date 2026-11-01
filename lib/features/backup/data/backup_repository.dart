@@ -5,8 +5,11 @@ import '../domain/backup_format.dart';
 
 /// What a restore brought in (for the confirmation message).
 class RestoreSummary {
-  const RestoreSummary(
-      {required this.exercises, required this.programs, required this.sessions});
+  const RestoreSummary({
+    required this.exercises,
+    required this.programs,
+    required this.sessions,
+  });
 
   final int exercises;
   final int programs;
@@ -27,14 +30,15 @@ class BackupRepository {
         programs: await _db.select(_db.programs).get(),
         workoutDays: await _db.select(_db.workoutDays).get(),
         supersetGroups: await _db.select(_db.supersetGroups).get(),
-        exercisePrescriptions:
-            await _db.select(_db.exercisePrescriptions).get(),
+        exercisePrescriptions: await _db
+            .select(_db.exercisePrescriptions)
+            .get(),
         workoutSessions: await _db.select(_db.workoutSessions).get(),
         setLogs: await _db.select(_db.setLogs).get(),
         miniSetLogs: await _db.select(_db.miniSetLogs).get(),
-        settingEntries: await (_db.select(_db.settingEntries)
-              ..orderBy([(e) => OrderingTerm.asc(e.key)]))
-            .get(),
+        settingEntries: await (_db.select(
+          _db.settingEntries,
+        )..orderBy([(e) => OrderingTerm.asc(e.key)])).get(),
       );
       return encodeBackup(
         contents,

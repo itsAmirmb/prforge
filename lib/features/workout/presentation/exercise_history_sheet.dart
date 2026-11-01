@@ -35,15 +35,21 @@ class ExerciseHistorySheet extends ConsumerWidget {
     return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.7),
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
         child: async.when(
           loading: () => const SizedBox(
-              height: 120, child: Center(child: CircularProgressIndicator())),
+            height: 120,
+            child: Center(child: CircularProgressIndicator()),
+          ),
           error: (e, _) => Padding(
-              padding: const EdgeInsets.all(24), child: Text('Error: $e')),
+            padding: const EdgeInsets.all(24),
+            child: Text('Error: $e'),
+          ),
           data: (progress) {
-            final recent =
-                progress.points.reversed.take(historySheetSessions).toList();
+            final recent = progress.points.reversed
+                .take(historySheetSessions)
+                .toList();
             final max = progress.maxWeight;
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -62,8 +68,10 @@ class ExerciseHistorySheet extends ConsumerWidget {
                   if (max != null)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: Text('Max weight: ${formatWeight(max)} kg',
-                          style: theme.textTheme.bodyMedium),
+                      child: Text(
+                        'Max weight: ${formatWeight(max)} kg',
+                        style: theme.textTheme.bodyMedium,
+                      ),
                     ),
                   Flexible(
                     child: ListView(
@@ -82,10 +90,12 @@ class ExerciseHistorySheet extends ConsumerWidget {
                         label: const Text('Full progress'),
                         onPressed: () {
                           Navigator.of(context).pop();
-                          Navigator.of(context).push(MaterialPageRoute<void>(
-                            builder: (_) =>
-                                ExerciseProgressScreen(exercise: exercise),
-                          ));
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  ExerciseProgressScreen(exercise: exercise),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -110,8 +120,10 @@ class _SessionTile extends StatelessWidget {
     return ListTile(
       dense: true,
       title: Text(patternText(point.segments)),
-      subtitle: Text('${formatDate(point.date)} · ${point.sets} sets · '
-          '${point.totalReps} reps'),
+      subtitle: Text(
+        '${formatDate(point.date)} · ${point.sets} sets · '
+        '${point.totalReps} reps',
+      ),
     );
   }
 }

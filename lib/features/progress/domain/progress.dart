@@ -20,9 +20,9 @@ class LoggedSet {
   final List<MiniSetLog> miniSets;
 
   List<Segment> get segments => [
-        (weight: log.weightKg, reps: log.reps ?? 0),
-        for (final m in miniSets) (weight: m.weightKg, reps: m.reps),
-      ];
+    (weight: log.weightKg, reps: log.reps ?? 0),
+    for (final m in miniSets) (weight: m.weightKg, reps: m.reps),
+  ];
 }
 
 /// The exercise as performed in one session.
@@ -58,8 +58,11 @@ class SessionPoint {
 
 /// Best performance at one weight across all sessions.
 class WeightRecord {
-  const WeightRecord(
-      {required this.weight, required this.bestReps, required this.sets});
+  const WeightRecord({
+    required this.weight,
+    required this.bestReps,
+    required this.sets,
+  });
 
   /// null = no weight (bodyweight).
   final double? weight;
@@ -103,7 +106,8 @@ ExerciseProgress buildExerciseProgress(Iterable<LoggedSet> sets) {
 
   final points = <SessionPoint>[];
   for (final entry in bySession.entries) {
-    final list = [...entry.value]..sort((a, b) {
+    final list = [...entry.value]
+      ..sort((a, b) {
         final byIndex = a.log.setIndex.compareTo(b.log.setIndex);
         return byIndex != 0 ? byIndex : a.log.id.compareTo(b.log.id);
       });
@@ -123,16 +127,18 @@ ExerciseProgress buildExerciseProgress(Iterable<LoggedSet> sets) {
         bestRepsAtMax = seg.reps;
       }
     }
-    points.add(SessionPoint(
-      sessionId: entry.key,
-      date: list.first.startedAt,
-      maxWeight: maxWeight,
-      bestRepsAtMax: bestRepsAtMax,
-      totalReps: totalReps,
-      volumeKg: volume,
-      sets: list.length,
-      segments: segments,
-    ));
+    points.add(
+      SessionPoint(
+        sessionId: entry.key,
+        date: list.first.startedAt,
+        maxWeight: maxWeight,
+        bestRepsAtMax: bestRepsAtMax,
+        totalReps: totalReps,
+        volumeKg: volume,
+        sets: list.length,
+        segments: segments,
+      ),
+    );
   }
   points.sort((a, b) {
     final byDate = a.date.compareTo(b.date);
@@ -157,7 +163,10 @@ ExerciseProgress buildExerciseProgress(Iterable<LoggedSet> sets) {
   final records = [
     for (final w in weights)
       WeightRecord(
-          weight: w, bestReps: bestReps[w] ?? 0, sets: setCount[w] ?? 0),
+        weight: w,
+        bestReps: bestReps[w] ?? 0,
+        sets: setCount[w] ?? 0,
+      ),
   ];
 
   return ExerciseProgress(points: points, records: records);
@@ -174,9 +183,11 @@ String patternText(List<Segment> segments) {
       groups.add((seg.weight, [seg.reps]));
     }
   }
-  return groups.map((g) {
-    final reps = g.$2.join(', ');
-    final w = formatWeight(g.$1);
-    return w == null ? '$reps reps' : '$w kg × $reps';
-  }).join(' · ');
+  return groups
+      .map((g) {
+        final reps = g.$2.join(', ');
+        final w = formatWeight(g.$1);
+        return w == null ? '$reps reps' : '$w kg × $reps';
+      })
+      .join(' · ');
 }

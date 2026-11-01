@@ -35,7 +35,7 @@ class SetWithMinis extends ConsumerWidget {
 
     final minis =
         ref.watch(miniSetsBySetProvider(log.sessionId)).value?[log.id] ??
-            const <MiniSetLog>[];
+        const <MiniSetLog>[];
     final theme = Theme.of(context);
 
     return Column(
@@ -49,9 +49,10 @@ class SetWithMinis extends ConsumerWidget {
             children: [
               for (var i = 0; i < minis.length; i++)
                 MiniSetRow(
-                    key: ValueKey('mini${minis[i].id}'),
-                    mini: minis[i],
-                    number: i + 1),
+                  key: ValueKey('mini${minis[i].id}'),
+                  mini: minis[i],
+                  number: i + 1,
+                ),
               Row(
                 children: [
                   TextButton.icon(
@@ -61,8 +62,10 @@ class SetWithMinis extends ConsumerWidget {
                         ref.read(miniSetRepositoryProvider).add(log.id),
                   ),
                   if (minis.isNotEmpty)
-                    Text('Total: ${restPauseTotalReps(log, minis)} reps',
-                        style: theme.textTheme.bodySmall),
+                    Text(
+                      'Total: ${restPauseTotalReps(log, minis)} reps',
+                      style: theme.textTheme.bodySmall,
+                    ),
                 ],
               ),
             ],

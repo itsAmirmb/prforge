@@ -12,12 +12,12 @@ class ProgressRepository {
   Stream<ExerciseProgress> watchExercise(int exerciseId) {
     final l = _db.setLogs;
     final s = _db.workoutSessions;
-    final query = _db.select(l).join([
-      innerJoin(s, s.id.equalsExp(l.sessionId)),
-    ])
-      ..where(l.exerciseId.equals(exerciseId) &
-          l.isCompleted.equals(true) &
-          s.status.equalsValue(SessionStatus.completed));
+    final query =
+        _db.select(l).join([innerJoin(s, s.id.equalsExp(l.sessionId))])..where(
+          l.exerciseId.equals(exerciseId) &
+              l.isCompleted.equals(true) &
+              s.status.equalsValue(SessionStatus.completed),
+        );
 
     return query.watch().asyncMap((rows) async {
       if (rows.isEmpty) return ExerciseProgress.empty;
@@ -38,20 +38,26 @@ class ProgressRepository {
     final m = _db.miniSetLogs;
     final l = _db.setLogs;
     final s = _db.workoutSessions;
-    final rows = await (_db.select(m).join([
-      innerJoin(l, l.id.equalsExp(m.setLogId)),
-      innerJoin(s, s.id.equalsExp(l.sessionId)),
-    ])
-          ..where(l.exerciseId.equals(exerciseId) &
-              l.isCompleted.equals(true) &
-              s.status.equalsValue(SessionStatus.completed))
-          ..orderBy([OrderingTerm.asc(m.miniSetIndex), OrderingTerm.asc(m.id)]))
-        .get();
+    final rows =
+        await (_db.select(m).join([
+                innerJoin(l, l.id.equalsExp(m.setLogId)),
+                innerJoin(s, s.id.equalsExp(l.sessionId)),
+              ])
+              ..where(
+                l.exerciseId.equals(exerciseId) &
+                    l.isCompleted.equals(true) &
+                    s.status.equalsValue(SessionStatus.completed),
+              )
+              ..orderBy([
+                OrderingTerm.asc(m.miniSetIndex),
+                OrderingTerm.asc(m.id),
+              ]))
+            .get();
     final map = <int, List<MiniSetLog>>{};
     for (final r in rows) {
-      map.putIfAbsent(r.readTable(m).setLogId, () => <MiniSetLog>[]).add(
-            r.readTable(m),
-          );
+      map
+          .putIfAbsent(r.readTable(m).setLogId, () => <MiniSetLog>[])
+          .add(r.readTable(m));
     }
     return map;
   }

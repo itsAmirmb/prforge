@@ -7,33 +7,40 @@ final t0 = DateTime(2026, 1, 1, 9, 0);
 DateTime at(int minutes) => t0.add(Duration(minutes: minutes));
 
 Exercise ex(int id) => Exercise(
-    id: id,
-    name: 'E$id',
-    category: null,
-    equipment: null,
-    notes: null,
-    isBodyweight: false,
-    isArchived: false);
+  id: id,
+  name: 'E$id',
+  category: null,
+  equipment: null,
+  notes: null,
+  isBodyweight: false,
+  isArchived: false,
+);
 
 SetLog set(int id, int exerciseId, int? doneAtMin, {String? key}) => SetLog(
-    id: id,
-    sessionId: 1,
-    exerciseId: exerciseId,
-    prescriptionId: exerciseId,
-    setIndex: id,
-    setKind: SetKind.normal,
-    weightKg: 10,
-    reps: 10,
-    isCompleted: doneAtMin != null,
-    completedAt: doneAtMin == null ? null : at(doneAtMin),
-    supersetKey: key,
-    roundIndex: null,
-    mainSetId: null,
-    entryOrder: null,
-    note: null);
+  id: id,
+  sessionId: 1,
+  exerciseId: exerciseId,
+  prescriptionId: exerciseId,
+  setIndex: id,
+  setKind: SetKind.normal,
+  weightKg: 10,
+  reps: 10,
+  isCompleted: doneAtMin != null,
+  completedAt: doneAtMin == null ? null : at(doneAtMin),
+  supersetKey: key,
+  roundIndex: null,
+  mainSetId: null,
+  entryOrder: null,
+  note: null,
+);
 
 SingleEntry single(int exerciseId, List<SetLog> sets) => SingleEntry(
-    ExerciseBlock(exercise: ex(exerciseId), prescriptionId: exerciseId, sets: sets));
+  ExerciseBlock(
+    exercise: ex(exerciseId),
+    prescriptionId: exerciseId,
+    sets: sets,
+  ),
+);
 
 void main() {
   test('first exercise starts at the session start', () {
@@ -58,13 +65,21 @@ void main() {
 
   test('superset is timed as one entry', () {
     final m1 = ExerciseBlock(
-        exercise: ex(1),
-        prescriptionId: 1,
-        sets: [set(1, 1, 2, key: 's1'), set(3, 1, 6, key: 's1')]);
+      exercise: ex(1),
+      prescriptionId: 1,
+      sets: [
+        set(1, 1, 2, key: 's1'),
+        set(3, 1, 6, key: 's1'),
+      ],
+    );
     final m2 = ExerciseBlock(
-        exercise: ex(2),
-        prescriptionId: 2,
-        sets: [set(2, 2, 4, key: 's1'), set(4, 2, 8, key: 's1')]);
+      exercise: ex(2),
+      prescriptionId: 2,
+      sets: [
+        set(2, 2, 4, key: 's1'),
+        set(4, 2, 8, key: 's1'),
+      ],
+    );
     final entry = SupersetEntry(key: 's1', members: [m1, m2]);
     final t = entryTiming(entry, [...m1.sets, ...m2.sets], t0)!;
     expect(t.start, t0);
@@ -79,20 +94,21 @@ void main() {
   test('old sessions: completed sets with null time give no timing', () {
     final s = set(1, 1, 5);
     final old = SetLog(
-        id: s.id,
-        sessionId: 1,
-        exerciseId: 1,
-        prescriptionId: 1,
-        setIndex: 0,
-        setKind: SetKind.normal,
-        weightKg: 10,
-        reps: 10,
-        isCompleted: true,
-        supersetKey: null,
-        roundIndex: null,
-        mainSetId: null,
-        entryOrder: null,
-        note: null);
+      id: s.id,
+      sessionId: 1,
+      exerciseId: 1,
+      prescriptionId: 1,
+      setIndex: 0,
+      setKind: SetKind.normal,
+      weightKg: 10,
+      reps: 10,
+      isCompleted: true,
+      supersetKey: null,
+      roundIndex: null,
+      mainSetId: null,
+      entryOrder: null,
+      note: null,
+    );
     expect(entryTiming(single(1, [old]), [old], t0), isNull);
   });
 

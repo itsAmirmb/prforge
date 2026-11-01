@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../app/theme.dart';
 import '../../../core/utils/date_format.dart';
+import '../../../core/widgets/state_views.dart';
 import '../../workout/domain/rest_pause.dart';
 import '../../workout/domain/session_blocks.dart';
 import '../../workout/presentation/exercise_history_sheet.dart';
@@ -35,14 +37,17 @@ class SessionDetailScreen extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         title: const Text('Delete workout?'),
         content: const Text(
-            'This permanently removes the workout and all its sets.'),
+          'This permanently removes the workout and all its sets.',
+        ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Delete')),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
@@ -54,7 +59,8 @@ class SessionDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entries = ref.watch(sessionEntriesProvider(_sessionId));
-    final minis = ref.watch(miniSetsBySetProvider(_sessionId)).value ??
+    final minis =
+        ref.watch(miniSetsBySetProvider(_sessionId)).value ??
         const <int, List<MiniSetLog>>{};
     final theme = Theme.of(context);
 
@@ -70,35 +76,44 @@ class SessionDetailScreen extends ConsumerWidget {
         ],
       ),
       body: entries.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => const LoadingState(),
+        error: (e, _) => ErrorState(e),
         data: (list) {
           final allSets = [
             for (final e in list)
               for (final b in e.blocks) ...b.sets,
           ];
           return ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: Text(
-                formatDateTime(summary.session.startedAt),
-                style: theme.textTheme.bodyMedium,
+            padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg + 4,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.xs,
+                ),
+                child: Text(
+                  formatDateTime(summary.session.startedAt),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
-            ),
-            for (final e in list)
-              switch (e) {
-                SingleEntry() => _BlockCard(
+              for (final e in list)
+                switch (e) {
+                  SingleEntry() => _BlockCard(
                     block: e.block,
                     minis: minis,
-                    timing: entryTiming(e, allSets, summary.session.startedAt)),
-                SupersetEntry() => _SupersetCard(
+                    timing: entryTiming(e, allSets, summary.session.startedAt),
+                  ),
+                  SupersetEntry() => _SupersetCard(
                     entry: e,
                     minis: minis,
-                    timing: entryTiming(e, allSets, summary.session.startedAt)),
-              },
-          ],
+                    timing: entryTiming(e, allSets, summary.session.startedAt),
+                  ),
+                },
+            ],
           );
         },
       ),
@@ -124,8 +139,11 @@ class _ExerciseTitle extends StatelessWidget {
           children: [
             Flexible(child: Text(text, style: theme.textTheme.titleMedium)),
             const SizedBox(width: 6),
-            Icon(Icons.info_outline,
-                size: 16, color: theme.colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.info_outline,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ],
         ),
       ),
@@ -147,8 +165,8 @@ class _TimingLine extends StatelessWidget {
       padding: const EdgeInsets.only(top: 2),
       child: Text(
         '${formatTime(t.start)} – ${formatTime(t.end)} · ${formatDuration(t.duration)}',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
       ),
     );
   }
@@ -173,16 +191,21 @@ List<Widget> _setLines(
         ),
       Padding(
         padding: const EdgeInsets.only(left: 20),
-        child: Text('= ${restPauseTotalReps(set, parts)} reps',
-            style: theme.textTheme.bodySmall),
+        child: Text(
+          '= ${restPauseTotalReps(set, parts)} reps',
+          style: theme.textTheme.bodySmall,
+        ),
       ),
     ],
   ];
 }
 
 class _BlockCard extends StatelessWidget {
-  const _BlockCard(
-      {required this.block, required this.minis, required this.timing});
+  const _BlockCard({
+    required this.block,
+    required this.minis,
+    required this.timing,
+  });
 
   final ExerciseBlock block;
   final Map<int, List<MiniSetLog>> minis;
@@ -190,11 +213,12 @@ class _BlockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final kind = block.sets.isEmpty ? null : _kindLabels[block.sets.first.setKind];
+    final kind = block.sets.isEmpty
+        ? null
+        : _kindLabels[block.sets.first.setKind];
     return Card(
-      margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -207,8 +231,12 @@ class _BlockCard extends StatelessWidget {
             _TimingLine(timing),
             const SizedBox(height: 6),
             for (var i = 0; i < block.sets.length; i++)
-              ..._setLines(context, block.sets[i], minis,
-                  prefix: '${i + 1}.  '),
+              ..._setLines(
+                context,
+                block.sets[i],
+                minis,
+                prefix: '${i + 1}.  ',
+              ),
           ],
         ),
       ),
@@ -217,8 +245,11 @@ class _BlockCard extends StatelessWidget {
 }
 
 class _SupersetCard extends StatelessWidget {
-  const _SupersetCard(
-      {required this.entry, required this.minis, required this.timing});
+  const _SupersetCard({
+    required this.entry,
+    required this.minis,
+    required this.timing,
+  });
 
   final SupersetEntry entry;
   final Map<int, List<MiniSetLog>> minis;
@@ -228,9 +259,8 @@ class _SupersetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
-      margin: const EdgeInsets.fromLTRB(12, 6, 12, 6),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -240,11 +270,20 @@ class _SupersetCard extends StatelessWidget {
             _TimingLine(timing),
             for (var r = 0; r < entry.rounds.length; r++) ...[
               const SizedBox(height: 8),
-              Text('Round ${r + 1}', style: theme.textTheme.labelLarge),
+              Text(
+                'Round ${r + 1}',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                ),
+              ),
               for (final member in entry.members)
                 if (entry.setInRound(member, entry.rounds[r]) case final set?)
-                  ..._setLines(context, set, minis,
-                      prefix: '${member.exercise.name}: '),
+                  ..._setLines(
+                    context,
+                    set,
+                    minis,
+                    prefix: '${member.exercise.name}: ',
+                  ),
             ],
           ],
         ),

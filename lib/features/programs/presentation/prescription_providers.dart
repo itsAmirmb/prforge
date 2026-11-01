@@ -11,14 +11,15 @@ final prescriptionRepositoryProvider = Provider<PrescriptionRepository>(
 
 final dayPrescriptionsProvider = StreamProvider.autoDispose
     .family<List<PrescriptionWithExercise>, int>(
-  (ref, dayId) => ref.watch(prescriptionRepositoryProvider).watchForDay(dayId),
-);
+      (ref, dayId) =>
+          ref.watch(prescriptionRepositoryProvider).watchForDay(dayId),
+    );
 
 final supersetRepositoryProvider = Provider<SupersetRepository>(
   (ref) => SupersetRepository(ref.watch(databaseProvider)),
 );
 
-final daySupersetGroupsProvider =
-    StreamProvider.autoDispose.family<List<SupersetGroup>, int>(
-  (ref, dayId) => ref.watch(supersetRepositoryProvider).watchGroups(dayId),
-);
+final daySupersetGroupsProvider = StreamProvider.autoDispose
+    .family<List<SupersetGroup>, int>(
+      (ref, dayId) => ref.watch(supersetRepositoryProvider).watchGroups(dayId),
+    );

@@ -83,13 +83,15 @@ ProgramTemplate parseProgramTemplate(String text) {
   } on FormatException {
     throw const ProgramTemplateException('This file is not valid JSON.');
   }
-  if (root is! Map<String, dynamic> || root['format'] != programTemplateFormat) {
+  if (root is! Map<String, dynamic> ||
+      root['format'] != programTemplateFormat) {
     throw const ProgramTemplateException('This is not a PRForge program file.');
   }
   final version = root['version'];
   if (version is! int || version > programTemplateVersion) {
     throw const ProgramTemplateException(
-        'This program file was made for a newer version of the app.');
+      'This program file was made for a newer version of the app.',
+    );
   }
   final days = root['days'];
   if (days is! List || days.isEmpty) {
@@ -97,9 +99,7 @@ ProgramTemplate parseProgramTemplate(String text) {
   }
   return ProgramTemplate(
     name: _name(root, 'program'),
-    days: [
-      for (var i = 0; i < days.length; i++) _day(days[i], i + 1),
-    ],
+    days: [for (var i = 0; i < days.length; i++) _day(days[i], i + 1)],
   );
 }
 
@@ -107,13 +107,18 @@ String _name(Map<String, dynamic> map, String what) {
   final raw = map['name'] ?? map['exercise'];
   if (raw is! String || raw.trim().isEmpty || raw.trim().length > 100) {
     throw ProgramTemplateException(
-        'Every $what needs a name of 1–100 characters.');
+      'Every $what needs a name of 1–100 characters.',
+    );
   }
   return raw.trim();
 }
 
-int? _positive(Map<String, dynamic> map, String key, String where,
-    {bool required = false}) {
+int? _positive(
+  Map<String, dynamic> map,
+  String key,
+  String where, {
+  bool required = false,
+}) {
   final value = map[key];
   if (value == null) {
     if (required) {
@@ -122,7 +127,9 @@ int? _positive(Map<String, dynamic> map, String key, String where,
     return null;
   }
   if (value is! int || value < 1) {
-    throw ProgramTemplateException('$where: "$key" must be a whole number ≥ 1.');
+    throw ProgramTemplateException(
+      '$where: "$key" must be a whole number ≥ 1.',
+    );
   }
   return value;
 }
@@ -187,7 +194,8 @@ TemplateExercise _exercise(Map<String, dynamic> raw, String where) {
     final match = SetKind.values.where((k) => k.name == typeName);
     if (match.isEmpty) {
       throw ProgramTemplateException(
-          '$where: unknown type "$typeName" (use ${SetKind.values.map((k) => k.name).join(', ')}).');
+        '$where: unknown type "$typeName" (use ${SetKind.values.map((k) => k.name).join(', ')}).',
+      );
     }
     type = match.first;
   }
@@ -198,7 +206,8 @@ TemplateExercise _exercise(Map<String, dynamic> raw, String where) {
         schemeRaw.isEmpty ||
         schemeRaw.any((r) => r is! int || r < 1)) {
       throw ProgramTemplateException(
-          '$where: "repScheme" must be a list of whole numbers ≥ 1.');
+        '$where: "repScheme" must be a list of whole numbers ≥ 1.',
+      );
     }
     scheme = schemeRaw.cast<int>();
   }

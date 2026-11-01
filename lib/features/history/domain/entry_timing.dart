@@ -42,11 +42,15 @@ DateTime entryStart(
   Iterable<SetLog> allSets,
   DateTime sessionStart,
   DateTime before,
-) =>
-    startBefore({
-      for (final b in entry.blocks)
-        for (final s in b.sets) s.id,
-    }, allSets, sessionStart, before);
+) => startBefore(
+  {
+    for (final b in entry.blocks)
+      for (final s in b.sets) s.id,
+  },
+  allSets,
+  sessionStart,
+  before,
+);
 
 /// Timing of [entry] inside a session, or null when its sets carry no
 /// completion times (sessions logged before times were recorded).

@@ -3,20 +3,21 @@ import 'package:prforge/core/database/app_database.dart';
 import 'package:prforge/features/workout/domain/set_order.dart';
 
 SetLog set(int id, {bool done = false}) => SetLog(
-    id: id,
-    sessionId: 1,
-    exerciseId: 1,
-    prescriptionId: null,
-    setIndex: id,
-    setKind: SetKind.normal,
-    weightKg: 10,
-    reps: 10,
-    isCompleted: done,
-    supersetKey: null,
-    roundIndex: null,
-    mainSetId: null,
-    entryOrder: null,
-    note: null);
+  id: id,
+  sessionId: 1,
+  exerciseId: 1,
+  prescriptionId: null,
+  setIndex: id,
+  setKind: SetKind.normal,
+  weightKg: 10,
+  reps: 10,
+  isCompleted: done,
+  supersetKey: null,
+  roundIndex: null,
+  mainSetId: null,
+  entryOrder: null,
+  note: null,
+);
 
 void main() {
   test('nothing done: first set is current', () {

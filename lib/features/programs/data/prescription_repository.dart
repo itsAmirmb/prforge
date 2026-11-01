@@ -38,10 +38,18 @@ class PrescriptionDraft {
       throw ArgumentError.value(targetReps, 'targetReps', 'must be >= 1');
     }
     if (repScheme != null && !isValidRepScheme(repScheme!)) {
-      throw ArgumentError.value(repScheme, 'repScheme', 'every value must be >= 1');
+      throw ArgumentError.value(
+        repScheme,
+        'repScheme',
+        'every value must be >= 1',
+      );
     }
     if (targetWeightKg != null && targetWeightKg! < 0) {
-      throw ArgumentError.value(targetWeightKg, 'targetWeightKg', 'must be >= 0');
+      throw ArgumentError.value(
+        targetWeightKg,
+        'targetWeightKg',
+        'must be >= 0',
+      );
     }
     if (restSeconds != null && restSeconds! < 0) {
       throw ArgumentError.value(restSeconds, 'restSeconds', 'must be >= 0');
@@ -63,18 +71,18 @@ class PrescriptionRepository {
 
   Stream<List<PrescriptionWithExercise>> watchForDay(int dayId) {
     final p = _db.exercisePrescriptions;
-    final query = _db.select(p).join([
-      innerJoin(_db.exercises, _db.exercises.id.equalsExp(p.exerciseId)),
-    ])
-      ..where(p.workoutDayId.equals(dayId))
-      ..orderBy([OrderingTerm.asc(p.orderIndex)]);
-    return query.watch().map((rows) => [
-          for (final r in rows)
-            PrescriptionWithExercise(
-              r.readTable(p),
-              r.readTable(_db.exercises),
-            ),
-        ]);
+    final query =
+        _db.select(p).join([
+            innerJoin(_db.exercises, _db.exercises.id.equalsExp(p.exerciseId)),
+          ])
+          ..where(p.workoutDayId.equals(dayId))
+          ..orderBy([OrderingTerm.asc(p.orderIndex)]);
+    return query.watch().map(
+      (rows) => [
+        for (final r in rows)
+          PrescriptionWithExercise(r.readTable(p), r.readTable(_db.exercises)),
+      ],
+    );
   }
 
   /// Appends the exercise at the end of the day.
@@ -82,12 +90,15 @@ class PrescriptionRepository {
     draft.validate();
     final p = _db.exercisePrescriptions;
     final maxIndex = p.orderIndex.max();
-    final row = await (_db.selectOnly(p)
-          ..addColumns([maxIndex])
-          ..where(p.workoutDayId.equals(dayId)))
-        .getSingle();
+    final row =
+        await (_db.selectOnly(p)
+              ..addColumns([maxIndex])
+              ..where(p.workoutDayId.equals(dayId)))
+            .getSingle();
     final next = (row.read(maxIndex) ?? -1) + 1;
-    return _db.into(p).insert(
+    return _db
+        .into(p)
+        .insert(
           ExercisePrescriptionsCompanion.insert(
             workoutDayId: dayId,
             exerciseId: draft.exerciseId,
@@ -105,8 +116,9 @@ class PrescriptionRepository {
 
   Future<void> update(int id, PrescriptionDraft draft) async {
     draft.validate();
-    await (_db.update(_db.exercisePrescriptions)..where((p) => p.id.equals(id)))
-        .write(
+    await (_db.update(
+      _db.exercisePrescriptions,
+    )..where((p) => p.id.equals(id))).write(
       ExercisePrescriptionsCompanion(
         exerciseId: Value(draft.exerciseId),
         targetSets: Value(draft.targetSets),
@@ -140,15 +152,15 @@ class PrescriptionRepository {
   /// than 2 members remain).
   Future<void> remove(int id) {
     return _db.transaction(() async {
-      final row = await (_db.select(_db.exercisePrescriptions)
-            ..where((p) => p.id.equals(id)))
-          .getSingleOrNull();
+      final row = await (_db.select(
+        _db.exercisePrescriptions,
+      )..where((p) => p.id.equals(id))).getSingleOrNull();
       if (row == null) return;
       await (_db.update(_db.setLogs)..where((l) => l.prescriptionId.equals(id)))
           .write(const SetLogsCompanion(prescriptionId: Value(null)));
-      await (_db.delete(_db.exercisePrescriptions)
-            ..where((p) => p.id.equals(id)))
-          .go();
+      await (_db.delete(
+        _db.exercisePrescriptions,
+      )..where((p) => p.id.equals(id))).go();
       await DayStructure(_db).normalize(row.workoutDayId);
     });
   }

@@ -25,12 +25,15 @@ class WorkoutDayRepository {
   /// Appends a day at the end of the program.
   Future<int> add(int programId, String name) async {
     final maxIndex = _db.workoutDays.orderIndex.max();
-    final row = await (_db.selectOnly(_db.workoutDays)
-          ..addColumns([maxIndex])
-          ..where(_db.workoutDays.programId.equals(programId)))
-        .getSingle();
+    final row =
+        await (_db.selectOnly(_db.workoutDays)
+              ..addColumns([maxIndex])
+              ..where(_db.workoutDays.programId.equals(programId)))
+            .getSingle();
     final next = (row.read(maxIndex) ?? -1) + 1;
-    return _db.into(_db.workoutDays).insert(
+    return _db
+        .into(_db.workoutDays)
+        .insert(
           WorkoutDaysCompanion.insert(
             programId: programId,
             name: _requireName(name),
@@ -40,8 +43,9 @@ class WorkoutDayRepository {
   }
 
   Future<void> rename(int id, String name) async {
-    await (_db.update(_db.workoutDays)..where((d) => d.id.equals(id)))
-        .write(WorkoutDaysCompanion(name: Value(_requireName(name))));
+    await (_db.update(_db.workoutDays)..where((d) => d.id.equals(id))).write(
+      WorkoutDaysCompanion(name: Value(_requireName(name))),
+    );
   }
 
   /// Persists the given order (first id gets index 0, and so on).
@@ -59,18 +63,19 @@ class WorkoutDayRepository {
   /// so history is never broken.
   Future<void> delete(int id) {
     return _db.transaction(() async {
-      final used = await (_db.select(_db.workoutSessions)
-            ..where((s) => s.workoutDayId.equals(id))
-            ..limit(1))
-          .get();
+      final used =
+          await (_db.select(_db.workoutSessions)
+                ..where((s) => s.workoutDayId.equals(id))
+                ..limit(1))
+              .get();
       if (used.isNotEmpty) throw const DayHasHistoryException();
 
-      await (_db.delete(_db.exercisePrescriptions)
-            ..where((p) => p.workoutDayId.equals(id)))
-          .go();
-      await (_db.delete(_db.supersetGroups)
-            ..where((g) => g.workoutDayId.equals(id)))
-          .go();
+      await (_db.delete(
+        _db.exercisePrescriptions,
+      )..where((p) => p.workoutDayId.equals(id))).go();
+      await (_db.delete(
+        _db.supersetGroups,
+      )..where((g) => g.workoutDayId.equals(id))).go();
       await (_db.delete(_db.workoutDays)..where((d) => d.id.equals(id))).go();
     });
   }

@@ -20,8 +20,8 @@ Future<void> showProgressiveLoadingSheet(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => ProgressiveLoadingSheet(
-        sessionId: sessionId, block: block, last: last),
+    builder: (_) =>
+        ProgressiveLoadingSheet(sessionId: sessionId, block: block, last: last),
   );
 }
 
@@ -45,11 +45,14 @@ class ProgressiveLoadingSheet extends ConsumerStatefulWidget {
 class _ProgressiveLoadingSheetState
     extends ConsumerState<ProgressiveLoadingSheet> {
   final _formKey = GlobalKey<FormState>();
-  late final List<SetLog> _editable =
-      widget.block.sets.where((s) => !s.isCompleted).toList();
+  late final List<SetLog> _editable = widget.block.sets
+      .where((s) => !s.isCompleted)
+      .toList();
   late final _previous = TextEditingController(
-      text: formatWeight(
-          _editable.map((s) => s.weightKg).whereType<double>().lastOrNull));
+    text: formatWeight(
+      _editable.map((s) => s.weightKg).whereType<double>().lastOrNull,
+    ),
+  );
   final _new = TextEditingController();
   int _atNew = 1;
 
@@ -67,7 +70,9 @@ class _ProgressiveLoadingSheetState
 
   Future<void> _apply() async {
     if (!_formKey.currentState!.validate()) return;
-    await ref.read(sessionRepositoryProvider).applyProgressiveLoading(
+    await ref
+        .read(sessionRepositoryProvider)
+        .applyProgressiveLoading(
           sessionId: widget.sessionId,
           exerciseId: widget.block.exercise.id,
           prescriptionId: widget.block.prescriptionId,
@@ -93,7 +98,11 @@ class _ProgressiveLoadingSheetState
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          16, 0, 16, 16 + MediaQuery.of(context).viewInsets.bottom),
+        16,
+        0,
+        16,
+        16 + MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -101,8 +110,10 @@ class _ProgressiveLoadingSheetState
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Progressive loading · ${widget.block.exercise.name}',
-                  style: theme.textTheme.titleMedium),
+              Text(
+                'Progressive loading · ${widget.block.exercise.name}',
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -110,12 +121,14 @@ class _ProgressiveLoadingSheetState
                     child: TextFormField(
                       controller: _previous,
                       keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                        decimal: true,
+                      ),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                       ],
-                      decoration:
-                          const InputDecoration(labelText: 'Previous kg'),
+                      decoration: const InputDecoration(
+                        labelText: 'Previous kg',
+                      ),
                       validator: _weightValidator,
                       onChanged: (_) => setState(() {}),
                     ),
@@ -126,7 +139,8 @@ class _ProgressiveLoadingSheetState
                       controller: _new,
                       autofocus: true,
                       keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
+                        decimal: true,
+                      ),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                       ],
@@ -152,31 +166,39 @@ class _ProgressiveLoadingSheetState
                   ),
                 ),
               const SizedBox(height: 16),
-              Text('Sets at new weight (of $_total unfinished)',
-                  style: theme.textTheme.labelLarge),
+              Text(
+                'Sets at new weight (of $_total unfinished)',
+                style: theme.textTheme.labelLarge,
+              ),
               Row(
                 children: [
                   IconButton.filledTonal(
                     tooltip: 'Fewer',
                     icon: const Icon(Icons.remove),
-                    onPressed:
-                        _atNew > 0 ? () => setState(() => _atNew--) : null,
+                    onPressed: _atNew > 0
+                        ? () => setState(() => _atNew--)
+                        : null,
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text('$_atNew / $_total',
-                        style: theme.textTheme.headlineSmall),
+                    child: Text(
+                      '$_atNew / $_total',
+                      style: theme.textTheme.headlineSmall,
+                    ),
                   ),
                   IconButton.filledTonal(
                     tooltip: 'More',
                     icon: const Icon(Icons.add),
-                    onPressed:
-                        _atNew < _total ? () => setState(() => _atNew++) : null,
+                    onPressed: _atNew < _total
+                        ? () => setState(() => _atNew++)
+                        : null,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Text('Remaining: $remaining at previous weight',
-                        style: theme.textTheme.bodySmall),
+                    child: Text(
+                      'Remaining: $remaining at previous weight',
+                      style: theme.textTheme.bodySmall,
+                    ),
                   ),
                 ],
               ),
@@ -186,7 +208,8 @@ class _ProgressiveLoadingSheetState
                   child: Text(
                     [
                       if (_atNew > 0) '${formatWeight(newW)} kg × $_atNew',
-                      if (remaining > 0) '${formatWeight(prevW)} kg × $remaining',
+                      if (remaining > 0)
+                        '${formatWeight(prevW)} kg × $remaining',
                     ].join('  +  '),
                     style: theme.textTheme.titleSmall,
                   ),
@@ -194,14 +217,18 @@ class _ProgressiveLoadingSheetState
               if (widget.block.sets.any((s) => s.isCompleted))
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
-                  child: Text('Completed sets are not changed.',
-                      style: theme.textTheme.bodySmall),
+                  child: Text(
+                    'Completed sets are not changed.',
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                    onPressed: _apply, child: const Text('Apply')),
+                  onPressed: _apply,
+                  child: const Text('Apply'),
+                ),
               ),
             ],
           ),

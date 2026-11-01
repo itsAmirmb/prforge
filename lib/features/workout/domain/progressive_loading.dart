@@ -34,7 +34,10 @@ List<PlannedSet> planProgressiveLoading({
   }
   if (setsAtNewWeight < 0 || setsAtNewWeight > totalSets) {
     throw ArgumentError.value(
-        setsAtNewWeight, 'setsAtNewWeight', 'must be within 0..$totalSets');
+      setsAtNewWeight,
+      'setsAtNewWeight',
+      'must be within 0..$totalSets',
+    );
   }
   return [
     for (var i = 0; i < totalSets; i++)

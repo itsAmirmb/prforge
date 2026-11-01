@@ -50,7 +50,11 @@ class _ChartPainter extends CustomPainter {
 
     const left = 44.0, top = 8.0, bottom = 8.0, right = 8.0;
     final plot = Rect.fromLTRB(
-        left, top, size.width - right, size.height - bottom);
+      left,
+      top,
+      size.width - right,
+      size.height - bottom,
+    );
 
     var minV = present.reduce((a, b) => a < b ? a : b);
     var maxV = present.reduce((a, b) => a > b ? a : b);

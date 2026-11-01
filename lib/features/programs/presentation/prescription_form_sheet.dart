@@ -64,10 +64,12 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
   late final ExercisePrescription? _p = widget.existing?.prescription;
   late final _sets = TextEditingController(text: '${_p?.targetSets ?? 3}');
   late final _reps = TextEditingController(
-      text: parseRepScheme(_p?.repScheme)?.join(', ') ??
-          _p?.targetReps?.toString());
-  late final _weight =
-      TextEditingController(text: _formatWeight(_p?.targetWeightKg));
+    text:
+        parseRepScheme(_p?.repScheme)?.join(', ') ?? _p?.targetReps?.toString(),
+  );
+  late final _weight = TextEditingController(
+    text: _formatWeight(_p?.targetWeightKg),
+  );
   late final _rest = TextEditingController(text: _p?.restSeconds?.toString());
   late final _notes = TextEditingController(text: _p?.notes);
   late int? _exerciseId = _p?.exerciseId;
@@ -147,7 +149,11 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          16, 0, 16, 16 + MediaQuery.of(context).viewInsets.bottom),
+        16,
+        0,
+        16,
+        16 + MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -192,8 +198,9 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
                         controller: _reps,
                         keyboardType: TextInputType.text,
                         decoration: const InputDecoration(
-                            labelText: 'Reps',
-                            hintText: '10  or  12, 10, 8, 8'),
+                          labelText: 'Reps',
+                          hintText: '10  or  12, 10, 8, 8',
+                        ),
                         validator: _validateReps,
                       ),
                     ),
@@ -205,8 +212,9 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
                     child: Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                          'Sets = ${widget.lockedSets} rounds of the superset.',
-                          style: Theme.of(context).textTheme.bodySmall),
+                        'Sets = ${widget.lockedSets} rounds of the superset.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     ),
                   ),
                 Row(
@@ -215,9 +223,11 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
                       child: TextFormField(
                         controller: _weight,
                         keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
+                          decimal: true,
+                        ),
                         decoration: const InputDecoration(
-                            labelText: 'Target kg (optional)'),
+                          labelText: 'Target kg (optional)',
+                        ),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) return null;
                           final w = _parseWeight(v);
@@ -233,7 +243,8 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
                         controller: _rest,
                         keyboardType: TextInputType.number,
                         decoration: const InputDecoration(
-                            labelText: 'Rest sec (optional)'),
+                          labelText: 'Rest sec (optional)',
+                        ),
                         validator: (v) => _optionalInt(v),
                       ),
                     ),
@@ -250,14 +261,17 @@ class _PrescriptionFormSheetState extends ConsumerState<PrescriptionFormSheet> {
                 ),
                 TextFormField(
                   controller: _notes,
-                  decoration:
-                      const InputDecoration(labelText: 'Notes (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Notes (optional)',
+                  ),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
-                  child:
-                      FilledButton(onPressed: _save, child: const Text('Save')),
+                  child: FilledButton(
+                    onPressed: _save,
+                    child: const Text('Save'),
+                  ),
                 ),
               ],
             ],

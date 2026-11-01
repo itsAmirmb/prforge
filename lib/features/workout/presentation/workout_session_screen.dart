@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/state_views.dart';
 import '../domain/session_blocks.dart';
 import 'exercise_block_card.dart';
 import 'exercise_picker_sheet.dart';
@@ -16,8 +17,12 @@ class WorkoutSessionScreen extends ConsumerWidget {
 
   final int sessionId;
 
-  Future<bool> _confirm(BuildContext context,
-      {required String title, required String message, required String action}) async {
+  Future<bool> _confirm(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String action,
+  }) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -39,7 +44,10 @@ class WorkoutSessionScreen extends ConsumerWidget {
   }
 
   Future<void> _finish(
-      BuildContext context, WidgetRef ref, List<SessionEntry> entries) async {
+    BuildContext context,
+    WidgetRef ref,
+    List<SessionEntry> entries,
+  ) async {
     final sets = [
       for (final e in entries)
         for (final b in e.blocks) ...b.sets,
@@ -49,8 +57,11 @@ class WorkoutSessionScreen extends ConsumerWidget {
     if (done == 0) {
       ScaffoldMessenger.of(context)
         ..clearSnackBars()
-        ..showSnackBar(const SnackBar(
-            content: Text('Complete at least one set, or discard the workout.')));
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Complete at least one set, or discard the workout.'),
+          ),
+        );
       return;
     }
     final ok = await _confirm(
@@ -99,95 +110,99 @@ class WorkoutSessionScreen extends ConsumerWidget {
     final done = sets.where((s) => s.isCompleted).length;
 
     return KeepScreenOn(
-        child: Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Workout · $done/${sets.length} sets'),
-            WorkoutClockChip(sessionId: sessionId),
-          ],
-        ),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(
-            value: sets.isEmpty ? 0 : done / sets.length,
-            minHeight: 4,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: entriesAsync.hasValue
-                ? () => _finish(context, ref, entries)
-                : null,
-            child: const Text('Finish'),
-          ),
-          PopupMenuButton<String>(
-            onSelected: (_) => _discard(context, ref),
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'discard', child: Text('Discard workout')),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Workout · $done/${sets.length} sets'),
+              WorkoutClockChip(sessionId: sessionId),
             ],
           ),
-        ],
-      ),
-      bottomNavigationBar: const RestTimerBar(),
-      body: entriesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (list) => ReorderableListView.builder(
-          padding: const EdgeInsets.only(bottom: 24),
-          buildDefaultDragHandles: false,
-          itemCount: list.length,
-          onReorderItem: (oldIndex, newIndex) {
-            final tokens = [for (final e in list) e.token];
-            tokens.insert(newIndex, tokens.removeAt(oldIndex));
-            ref
-                .read(sessionRepositoryProvider)
-                .reorderEntries(sessionId, tokens);
-          },
-          itemBuilder: (context, i) => switch (list[i]) {
-            SingleEntry(:final block) => ExerciseBlockCard(
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(4),
+            child: LinearProgressIndicator(
+              value: sets.isEmpty ? 0 : done / sets.length,
+              minHeight: 4,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: entriesAsync.hasValue
+                  ? () => _finish(context, ref, entries)
+                  : null,
+              child: const Text('Finish'),
+            ),
+            PopupMenuButton<String>(
+              onSelected: (_) => _discard(context, ref),
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'discard', child: Text('Discard workout')),
+              ],
+            ),
+          ],
+        ),
+        bottomNavigationBar: const RestTimerBar(),
+        body: entriesAsync.when(
+          loading: () => const LoadingState(),
+          error: (e, _) => ErrorState(e),
+          data: (list) => ReorderableListView.builder(
+            padding: const EdgeInsets.only(bottom: 24),
+            buildDefaultDragHandles: false,
+            itemCount: list.length,
+            onReorderItem: (oldIndex, newIndex) {
+              final tokens = [for (final e in list) e.token];
+              tokens.insert(newIndex, tokens.removeAt(oldIndex));
+              ref
+                  .read(sessionRepositoryProvider)
+                  .reorderEntries(sessionId, tokens);
+            },
+            itemBuilder: (context, i) => switch (list[i]) {
+              SingleEntry(:final block) => ExerciseBlockCard(
                 key: ValueKey(list[i].token),
                 sessionId: sessionId,
                 block: block,
                 dragIndex: i,
               ),
-            SupersetEntry e => SupersetCard(
+              SupersetEntry e => SupersetCard(
                 key: ValueKey(list[i].token),
                 sessionId: sessionId,
                 entry: e,
                 dragIndex: i,
               ),
-          },
-          footer: Column(
-            children: [
-              if (list.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('This workout has no sets.'),
-                ),
-              if (sets.isNotEmpty && done == sets.length)
+            },
+            footer: Column(
+              children: [
+                if (list.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('This workout has no sets.'),
+                  ),
+                if (sets.isNotEmpty && done == sets.length)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                    child: FilledButton.icon(
+                      icon: const Icon(Icons.flag),
+                      label: const Text('All sets done · Finish workout'),
+                      onPressed: () => _finish(context, ref, list),
+                    ),
+                  ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                  child: FilledButton.icon(
-                    icon: const Icon(Icons.flag),
-                    label: const Text('All sets done · Finish workout'),
-                    onPressed: () => _finish(context, ref, list),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add exercise'),
+                      onPressed: () => _addExercise(context, ref),
+                    ),
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add exercise'),
-                  onPressed: () => _addExercise(context, ref),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 }

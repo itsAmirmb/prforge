@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// HapticFeedback and never throws: feedback must not break a workout.
 class FeedbackService {
   FeedbackService([MethodChannel? channel])
-      : _channel = channel ?? const MethodChannel(channelName);
+    : _channel = channel ?? const MethodChannel(channelName);
 
   static const channelName = 'prforge/feedback';
 
@@ -73,4 +73,6 @@ class FeedbackService {
   }
 }
 
-final feedbackServiceProvider = Provider<FeedbackService>((ref) => FeedbackService());
+final feedbackServiceProvider = Provider<FeedbackService>(
+  (ref) => FeedbackService(),
+);

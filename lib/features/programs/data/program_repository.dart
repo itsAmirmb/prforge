@@ -17,8 +17,9 @@ class ProgramRepository {
   }
 
   Stream<Program?> watchProgram(int id) {
-    return (_db.select(_db.programs)..where((p) => p.id.equals(id)))
-        .watchSingleOrNull();
+    return (_db.select(
+      _db.programs,
+    )..where((p) => p.id.equals(id))).watchSingleOrNull();
   }
 
   Future<int> add(String name) {

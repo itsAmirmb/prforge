@@ -23,7 +23,9 @@ class ExerciseRepository {
     String? notes,
     bool isBodyweight = false,
   }) {
-    return _db.into(_db.exercises).insert(
+    return _db
+        .into(_db.exercises)
+        .insert(
           ExercisesCompanion.insert(
             name: _requireName(name),
             category: Value(_clean(category)),
@@ -54,8 +56,9 @@ class ExerciseRepository {
   }
 
   Future<void> setArchived(int id, bool archived) async {
-    await (_db.update(_db.exercises)..where((e) => e.id.equals(id)))
-        .write(ExercisesCompanion(isArchived: Value(archived)));
+    await (_db.update(_db.exercises)..where((e) => e.id.equals(id))).write(
+      ExercisesCompanion(isArchived: Value(archived)),
+    );
   }
 
   static String _requireName(String name) {

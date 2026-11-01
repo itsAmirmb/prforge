@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../app/theme.dart';
 import '../../../core/utils/format.dart';
 import '../data/session_repository.dart';
 import 'entry_clock_chip.dart';
@@ -21,6 +22,7 @@ class SetRow extends ConsumerStatefulWidget {
   });
 
   final SetLog log;
+
   /// Set number, or [label] (exercise name) inside a superset round.
   final int? number;
   final String? label;
@@ -31,8 +33,9 @@ class SetRow extends ConsumerStatefulWidget {
 }
 
 class _SetRowState extends ConsumerState<SetRow> {
-  late final _weight =
-      TextEditingController(text: formatWeight(widget.log.weightKg));
+  late final _weight = TextEditingController(
+    text: formatWeight(widget.log.weightKg),
+  );
   late final _reps = TextEditingController(text: widget.log.reps?.toString());
   final _weightFocus = FocusNode();
   final _repsFocus = FocusNode();
@@ -67,8 +70,11 @@ class _SetRowState extends ConsumerState<SetRow> {
     if ((target - position.pixels).abs() < position.viewportDimension * 0.3) {
       return;
     }
-    position.animateTo(target,
-        duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+    position.animateTo(
+      target,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
   void _selectAll(TextEditingController c) =>
@@ -126,11 +132,14 @@ class _SetRowState extends ConsumerState<SetRow> {
     });
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: AppMotion.of(context, AppMotion.medium),
+      curve: AppMotion.curve,
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
       decoration: BoxDecoration(
         color: isCurrent
             ? scheme.primaryContainer.withValues(alpha: 0.45)
+            : log.isCompleted
+            ? scheme.successContainer.withValues(alpha: 0.35)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
@@ -145,17 +154,20 @@ class _SetRowState extends ConsumerState<SetRow> {
                   widget.label ?? '${widget.number}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: widget.label == null
-                      ? Theme.of(context).textTheme.titleMedium
-                      : Theme.of(context).textTheme.bodySmall,
+                  style:
+                      (widget.label == null
+                              ? Theme.of(context).textTheme.titleMedium
+                              : Theme.of(context).textTheme.bodySmall)
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
               ),
               Expanded(
                 child: TextField(
                   controller: _weight,
                   focusNode: _weightFocus,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                   ],
@@ -175,20 +187,32 @@ class _SetRowState extends ConsumerState<SetRow> {
                   textInputAction: TextInputAction.done,
                   onTap: () => _selectAll(_reps),
                   decoration: const InputDecoration(labelText: 'reps'),
-                  onChanged: (v) => repo.setReps(log.id, int.tryParse(v.trim())),
+                  onChanged: (v) =>
+                      repo.setReps(log.id, int.tryParse(v.trim())),
                 ),
               ),
               IconButton(
                 tooltip: log.isCompleted ? 'Mark not done' : 'Mark done',
                 iconSize: 30,
-                color: log.isCompleted ? Theme.of(context).colorScheme.primary : null,
-                icon: Icon(log.isCompleted
-                    ? Icons.check_circle
-                    : Icons.radio_button_unchecked),
+                color: log.isCompleted
+                    ? scheme.success
+                    : scheme.onSurfaceVariant,
+                icon: AnimatedSwitcher(
+                  duration: AppMotion.of(context, AppMotion.fast),
+                  transitionBuilder: (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+                  child: Icon(
+                    log.isCompleted
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    key: ValueKey(log.isCompleted),
+                  ),
+                ),
                 onPressed: canToggle ? () => _toggle(repo) : null,
               ),
               IconButton(
                 tooltip: 'Delete set',
+                color: scheme.onSurfaceVariant,
                 icon: const Icon(Icons.close),
                 onPressed: widget.onDelete,
               ),

@@ -3,7 +3,11 @@ import 'progress.dart';
 
 /// How long an exercise has been done at the same top weight.
 class Plateau {
-  const Plateau({required this.weight, required this.sessions, required this.weeks});
+  const Plateau({
+    required this.weight,
+    required this.sessions,
+    required this.weeks,
+  });
 
   final double weight;
 
