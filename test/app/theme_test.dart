@@ -10,4 +10,19 @@ void main() {
       expect(t.useMaterial3, isTrue);
     }
   });
+
+  test('every text style has the readable on-surface color in both modes', () {
+    for (final b in Brightness.values) {
+      final t = buildTheme(b);
+      final onSurface = t.colorScheme.onSurface;
+      for (final style in [
+        t.textTheme.titleMedium,
+        t.textTheme.bodyLarge,
+        t.textTheme.labelMedium,
+        t.textTheme.headlineSmall,
+      ]) {
+        expect(style?.color, onSurface);
+      }
+    }
+  });
 }

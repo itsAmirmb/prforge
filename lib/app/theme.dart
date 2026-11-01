@@ -67,30 +67,28 @@ ColorScheme _scheme(Brightness brightness) {
 }
 
 TextTheme _textTheme(TextTheme t) => t.copyWith(
-  headlineSmall: t.headlineSmall?.copyWith(
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.2,
-  ),
-  titleLarge: t.titleLarge?.copyWith(
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.1,
-  ),
-  titleMedium: t.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-  titleSmall: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-  labelLarge: t.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-  labelMedium: t.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-);
+      headlineSmall: t.headlineSmall
+          ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.2),
+      titleLarge: t.titleLarge
+          ?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.1),
+      titleMedium: t.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+      titleSmall: t.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+      labelLarge: t.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      labelMedium: t.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+    );
 
 /// App theme for both brightness modes (same seed, same component styles).
 ThemeData buildTheme(Brightness brightness) {
   final scheme = _scheme(brightness);
   final base = ThemeData(useMaterial3: true, colorScheme: scheme);
-  final text = _textTheme(base.textTheme);
+  // Explicit colors on every style: a style taken from the theme and used on
+  // its own (e.g. a ListTile title) must never fall back to a light default.
+  final text = _textTheme(base.textTheme)
+      .apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
 
   const buttonSize = WidgetStatePropertyAll(Size(64, 48));
-  final menuShape = RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(AppRadius.md),
-  );
+  final menuShape =
+      RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md));
 
   OutlineInputBorder border(Color color, [double width = 1]) =>
       OutlineInputBorder(
@@ -112,9 +110,7 @@ ThemeData buildTheme(Brightness brightness) {
       color: scheme.surfaceContainerLow,
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.cardInset,
-        vertical: 6,
-      ),
+          horizontal: AppSpacing.cardInset, vertical: 6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.lg),
         side: BorderSide(color: scheme.outlineVariant),
@@ -122,7 +118,8 @@ ThemeData buildTheme(Brightness brightness) {
     ),
     inputDecorationTheme: InputDecorationTheme(
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: border(scheme.outline),
       enabledBorder: border(scheme.outline.withValues(alpha: 0.6)),
       focusedBorder: border(scheme.primary, 2),
@@ -130,14 +127,11 @@ ThemeData buildTheme(Brightness brightness) {
       focusedErrorBorder: border(scheme.error, 2),
     ),
     filledButtonTheme: const FilledButtonThemeData(
-      style: ButtonStyle(minimumSize: buttonSize),
-    ),
+        style: ButtonStyle(minimumSize: buttonSize)),
     outlinedButtonTheme: const OutlinedButtonThemeData(
-      style: ButtonStyle(minimumSize: buttonSize),
-    ),
-    textButtonTheme: const TextButtonThemeData(
-      style: ButtonStyle(minimumSize: buttonSize),
-    ),
+        style: ButtonStyle(minimumSize: buttonSize)),
+    textButtonTheme:
+        const TextButtonThemeData(style: ButtonStyle(minimumSize: buttonSize)),
     navigationBarTheme: NavigationBarThemeData(
       height: 68,
       elevation: 0,
@@ -157,15 +151,15 @@ ThemeData buildTheme(Brightness brightness) {
       backgroundColor: scheme.surfaceContainerLow,
       surfaceTintColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
       ),
     ),
     dialogTheme: DialogThemeData(
       backgroundColor: scheme.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-      ),
+          borderRadius: BorderRadius.circular(AppRadius.xl)),
     ),
     popupMenuTheme: PopupMenuThemeData(
       color: scheme.surfaceContainerHigh,
