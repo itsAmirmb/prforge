@@ -22,7 +22,8 @@ class WorkoutActions {
     final settings = _ref.read(userSettingsProvider);
     _ref.read(feedbackServiceProvider).setDone(vibration: settings.vibration);
     final rest = await repo.restAfterCompleting(log.id,
-        defaultRest: settings.restSeconds);
+        defaultRest: settings.restSeconds,
+        exerciseChangeRest: settings.restBetweenExercises);
     if (rest != null) _ref.read(restTimerProvider.notifier).start(rest);
   }
 
@@ -86,8 +87,11 @@ class WorkoutActions {
       sayName: settings.speakExerciseName,
       sayWeight: settings.speakWeight,
       sayReps: settings.speakReps,
-      persianAvailable:
-          settings.speakExerciseName ? await speech.persianAvailable : false,
+      language: settings.speechLanguage,
+      persianAvailable: settings.speakExerciseName ||
+              settings.speechLanguage == SpeechLanguage.persian
+          ? await speech.persianAvailable
+          : false,
     );
     // Let the rest-over beep finish first.
     if (settings.sound) {

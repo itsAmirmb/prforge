@@ -16,7 +16,7 @@ String formatRest(Duration d) {
   return '$m:$s';
 }
 
-/// Bottom bar of the workout screen: counts down the rest after a set, with
+/// Bar at the top of the workout screen: counts down the rest after a set, with
 /// -15s / +15s / skip. Vibrates, beeps and speaks the next set when the rest
 /// is over.
 class RestTimerBar extends ConsumerStatefulWidget {
@@ -82,6 +82,7 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
       color: theme.colorScheme.primaryContainer,
       child: SafeArea(
         top: false,
+        bottom: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
           child: Row(

@@ -124,8 +124,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await speech.speakAll(buildAnnouncement(
       exerciseName: 'پرس سینه',
       exerciseChanged: true,
-      weightKg: 60,
+      weightKg: 12.5,
       reps: 10,
+      language: ref.read(userSettingsProvider).speechLanguage,
       sayName: true,
       sayWeight: true,
       sayReps: true,
@@ -170,7 +171,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         children: [
           if (_busy) const LinearProgressIndicator(),
           _Section('Workout', [
-              const _RestTile(),
+              _RestTile(
+                title: 'Default rest',
+                subtitle: 'When the plan does not set a rest',
+                seconds: settings.restSeconds,
+                onChanged: ref.read(settingsRepositoryProvider).setRestSeconds,
+              ),
+              _RestTile(
+                title: 'Rest between exercises',
+                subtitle: 'After the last set of an exercise. Off = usual rest',
+                seconds: settings.restBetweenExercises,
+                onChanged:
+                    ref.read(settingsRepositoryProvider).setRestBetweenExercises,
+              ),
               SwitchListTile(
                 secondary: const Icon(Icons.volume_up_outlined),
                 title: const Text('Sound'),
@@ -201,17 +214,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
           ]),
           _Section('Voice', [
+              ListTile(
+                leading: const Icon(Icons.translate),
+                title: const Text('Voice language'),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SegmentedButton<SpeechLanguage>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(
+                          value: SpeechLanguage.english, label: Text('English')),
+                      ButtonSegment(
+                          value: SpeechLanguage.persian, label: Text('فارسی')),
+                    ],
+                    selected: {settings.speechLanguage},
+                    onSelectionChanged: (s) => ref
+                        .read(settingsRepositoryProvider)
+                        .setSpeechLanguage(s.first),
+                  ),
+                ),
+              ),
               SwitchListTile(
                 secondary: const Icon(Icons.record_voice_over_outlined),
                 title: const Text('Say reps'),
-                subtitle: const Text('When the rest is over, e.g. "10 reps"'),
+                subtitle: const Text('When the rest is over, e.g. "10 reps" / «ده تکرار»'),
                 value: settings.speakReps,
                 onChanged: ref.read(settingsRepositoryProvider).setSpeakReps,
               ),
               SwitchListTile(
                 secondary: const Icon(Icons.fitness_center),
                 title: const Text('Say weight'),
-                subtitle: const Text('e.g. "60 kilos"'),
+                subtitle: const Text('e.g. "12.5 kilos" / «دوازده و نیم کیلوگرم»'),
                 value: settings.speakWeight,
                 onChanged: ref.read(settingsRepositoryProvider).setSpeakWeight,
               ),
@@ -357,20 +390,28 @@ class _Section extends StatelessWidget {
   }
 }
 
-/// Default rest: used when the plan gives none. Steps of 15 s, 0 = off.
-class _RestTile extends ConsumerWidget {
-  const _RestTile();
+/// A rest length in steps of 15 s, 0 = off.
+class _RestTile extends StatelessWidget {
+  const _RestTile({
+    required this.title,
+    required this.subtitle,
+    required this.seconds,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String subtitle;
+  final int seconds;
+  final Future<void> Function(int seconds) onChanged;
 
   static const _step = 15;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final seconds = ref.watch(userSettingsProvider).restSeconds;
-    final repo = ref.read(settingsRepositoryProvider);
+  Widget build(BuildContext context) {
     return ListTile(
       leading: const Icon(Icons.timer_outlined),
-      title: const Text('Default rest'),
-      subtitle: const Text('When the plan does not set a rest'),
+      title: Text(title),
+      subtitle: Text(subtitle),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -378,7 +419,7 @@ class _RestTile extends ConsumerWidget {
             tooltip: 'Less rest',
             icon: const Icon(Icons.remove_circle_outline),
             onPressed:
-                seconds > 0 ? () => repo.setRestSeconds(seconds - _step) : null,
+                seconds > 0 ? () => onChanged(seconds - _step) : null,
           ),
           SizedBox(
             width: 48,
@@ -392,7 +433,7 @@ class _RestTile extends ConsumerWidget {
             tooltip: 'More rest',
             icon: const Icon(Icons.add_circle_outline),
             onPressed: seconds < maxDefaultRestSeconds
-                ? () => repo.setRestSeconds(seconds + _step)
+                ? () => onChanged(seconds + _step)
                 : null,
           ),
         ],

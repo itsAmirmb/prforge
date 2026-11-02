@@ -7,10 +7,7 @@ void main() {
     final template = parseProgramTemplate(programTemplateSample);
     expect(template.name, 'Push Pull Legs');
     expect(template.days, hasLength(2));
-    expect(
-      template.days.first.entries.whereType<TemplateSuperset>(),
-      hasLength(1),
-    );
+    expect(template.days.first.entries.whereType<TemplateSuperset>(), hasLength(1));
   });
 
   test('the guide contains the sample and names every set type', () {

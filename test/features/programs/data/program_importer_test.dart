@@ -10,34 +10,33 @@ import 'package:prforge/features/programs/data/program_importer.dart';
 import 'package:prforge/features/programs/domain/day_entries.dart';
 
 String template({List<Map<String, dynamic>>? entries}) => jsonEncode({
-  'format': 'prforge-program',
-  'version': 1,
-  'name': 'P',
-  'days': [
-    {
-      'name': 'D',
-      'entries':
-          entries ??
-          [
-            {'exercise': 'Bench', 'sets': 3, 'reps': 8},
-            {
-              'rounds': 2,
-              'superset': [
-                {'exercise': 'Curl', 'reps': 12},
-                {'exercise': 'Fly', 'reps': 12},
+      'format': 'prforge-program',
+      'version': 1,
+      'name': 'P',
+      'days': [
+        {
+          'name': 'D',
+          'entries': entries ??
+              [
+                {'exercise': 'Bench', 'sets': 3, 'reps': 8},
+                {
+                  'rounds': 2,
+                  'superset': [
+                    {'exercise': 'Curl', 'reps': 12},
+                    {'exercise': 'Fly', 'reps': 12},
+                  ],
+                },
+                {
+                  'exercise': 'Press',
+                  'sets': 2,
+                  'reps': 10,
+                  'type': 'restPause',
+                  'notes': 'rp'
+                },
               ],
-            },
-            {
-              'exercise': 'Press',
-              'sets': 2,
-              'reps': 10,
-              'type': 'restPause',
-              'notes': 'rp',
-            },
-          ],
-    },
-  ],
-});
+        },
+      ],
+    });
 
 void main() {
   late AppDatabase db;
@@ -50,9 +49,10 @@ void main() {
 
   tearDown(() => db.close());
 
-  Future<List<ExercisePrescription>> prescriptions() => (db.select(
-    db.exercisePrescriptions,
-  )..orderBy([(p) => OrderingTerm.asc(p.orderIndex)])).get();
+  Future<List<ExercisePrescription>> prescriptions() =>
+      (db.select(db.exercisePrescriptions)
+            ..orderBy([(p) => OrderingTerm.asc(p.orderIndex)]))
+          .get();
 
   test('creates program, day, exercises, prescriptions and superset', () async {
     final result = await importer.importJson(template());
@@ -81,11 +81,8 @@ void main() {
     expect(press.setType, SetKind.restPause);
     expect(press.notes, 'rp');
     expect(press.supersetGroupId, isNull);
-    expect(toEntries(list, (p) => p.supersetGroupId).map((e) => e.length), [
-      1,
-      2,
-      1,
-    ]);
+    expect(toEntries(list, (p) => p.supersetGroupId).map((e) => e.length),
+        [1, 2, 1]);
   });
 
   test('plan structure is already normalized', () async {
@@ -100,49 +97,28 @@ void main() {
     expect(await db.select(db.supersetGroups).getSingle(), groupBefore);
   });
 
-  test(
-    'reuses existing exercises by name (case, spaces) and unarchives',
-    () async {
-      final bench = await db
-          .into(db.exercises)
-          .insert(
-            ExercisesCompanion.insert(
-              name: 'Bench',
-              category: const Value('chest'),
-            ),
-          );
-      final curl = await db
-          .into(db.exercises)
-          .insert(
-            ExercisesCompanion.insert(
-              name: 'curl',
-              isArchived: const Value(true),
-            ),
-          );
+  test('reuses existing exercises by name (case, spaces) and unarchives',
+      () async {
+    final bench = await db.into(db.exercises).insert(ExercisesCompanion.insert(
+        name: 'Bench', category: const Value('chest')));
+    final curl = await db.into(db.exercises).insert(
+        ExercisesCompanion.insert(name: 'curl', isArchived: const Value(true)));
 
-      final result = await importer.importJson(
-        template(
-          entries: [
-            {'exercise': '  BENCH ', 'sets': 3},
-            {'exercise': 'Curl', 'sets': 3},
-            {'exercise': 'Bench', 'sets': 3}, // same exercise twice in one day
-          ],
-        ),
-      );
+    final result = await importer.importJson(template(entries: [
+      {'exercise': '  BENCH ', 'sets': 3},
+      {'exercise': 'Curl', 'sets': 3},
+      {'exercise': 'Bench', 'sets': 3}, // same exercise twice in one day
+    ]));
 
-      expect(result.exercisesCreated, 0);
-      expect(result.exercisesReused, 2);
-      final all = await db.select(db.exercises).get();
-      expect(all, hasLength(2));
-      expect(all.firstWhere((e) => e.id == bench).category, 'chest');
-      expect(all.firstWhere((e) => e.id == curl).isArchived, isFalse);
-      expect((await prescriptions()).map((p) => p.exerciseId), [
-        bench,
-        curl,
-        bench,
-      ]);
-    },
-  );
+    expect(result.exercisesCreated, 0);
+    expect(result.exercisesReused, 2);
+    final all = await db.select(db.exercises).get();
+    expect(all, hasLength(2));
+    expect(all.firstWhere((e) => e.id == bench).category, 'chest');
+    expect(all.firstWhere((e) => e.id == curl).isArchived, isFalse);
+    expect((await prescriptions()).map((p) => p.exerciseId),
+        [bench, curl, bench]);
+  });
 
   test('an exercise shared by two days is created once', () async {
     final text = jsonEncode({
@@ -185,23 +161,21 @@ void main() {
     expect(result.days, 3);
     expect(result.prescriptions, 42);
     expect(result.exercisesCreated, 41); // one exercise is shared by two days
-    final days = await (db.select(
-      db.workoutDays,
-    )..orderBy([(d) => OrderingTerm.asc(d.orderIndex)])).get();
+    final days = await (db.select(db.workoutDays)
+          ..orderBy([(d) => OrderingTerm.asc(d.orderIndex)]))
+        .get();
     final entryCounts = <int>[];
     for (final d in days) {
-      final rows =
-          await (db.select(db.exercisePrescriptions)
-                ..where((p) => p.workoutDayId.equals(d.id))
-                ..orderBy([(p) => OrderingTerm.asc(p.orderIndex)]))
-              .get();
+      final rows = await (db.select(db.exercisePrescriptions)
+            ..where((p) => p.workoutDayId.equals(d.id))
+            ..orderBy([(p) => OrderingTerm.asc(p.orderIndex)]))
+          .get();
       entryCounts.add(toEntries(rows, (p) => p.supersetGroupId).length);
     }
     expect(entryCounts, [11, 14, 11]);
     expect(await db.select(db.supersetGroups).get(), hasLength(6));
     expect(
-      (await prescriptions()).where((p) => p.setType == SetKind.restPause),
-      hasLength(3),
-    );
+        (await prescriptions()).where((p) => p.setType == SetKind.restPause),
+        hasLength(3));
   });
 }

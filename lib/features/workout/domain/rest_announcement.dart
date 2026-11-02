@@ -1,5 +1,6 @@
 import '../../../core/feedback/speech_service.dart';
 import '../../../core/utils/format.dart';
+import '../../../core/utils/spoken_numbers.dart';
 
 final _arabicScript = RegExp(r'[\u0600-\u06FF]');
 
@@ -8,7 +9,10 @@ final _arabicScript = RegExp(r'[\u0600-\u06FF]');
 /// The exercise name comes first, only when [exerciseChanged]; it is read in
 /// Persian if it is written in Persian script and [persianAvailable],
 /// skipped if the phone has no Persian voice, and read in English otherwise.
-/// Then "60 kilos, 10 reps" in English, as chosen in the settings.
+/// Then the weight and reps, as chosen in the settings: in English ("12 point
+/// 5 kilos, 10 reps") or, when [language] is Persian and the phone has a
+/// Persian voice, entirely in Persian words ("دوازده و نیم کیلوگرم، ده
+/// تکرار"). Without a Persian voice it falls back to English.
 List<Utterance> buildAnnouncement({
   required String exerciseName,
   required bool exerciseChanged,
@@ -18,6 +22,7 @@ List<Utterance> buildAnnouncement({
   required bool sayWeight,
   required bool sayReps,
   required bool persianAvailable,
+  SpeechLanguage language = SpeechLanguage.english,
 }) {
   final result = <Utterance>[];
   if (sayName && exerciseChanged && exerciseName.trim().isNotEmpty) {
@@ -27,11 +32,21 @@ List<Utterance> buildAnnouncement({
       result.add(Utterance(exerciseName.trim(), 'fa-IR'));
     }
   }
-  final weight = formatWeight(weightKg);
-  final parts = [
-    if (sayWeight && weight != null) '$weight kilos',
-    if (sayReps && reps != null) reps == 1 ? '1 rep' : '$reps reps',
-  ];
-  if (parts.isNotEmpty) result.add(Utterance(parts.join(', '), 'en-US'));
+  final inPersian = language == SpeechLanguage.persian && persianAvailable;
+  final hasWeight = sayWeight && formatWeight(weightKg) != null;
+  final hasReps = sayReps && reps != null;
+  final parts = inPersian
+      ? [
+          if (hasWeight) '${persianWeight(weightKg!)} کیلوگرم',
+          if (hasReps) '${persianInt(reps)} تکرار',
+        ]
+      : [
+          if (hasWeight) '${englishWeight(weightKg!)} kilos',
+          if (hasReps) reps == 1 ? '1 rep' : '$reps reps',
+        ];
+  if (parts.isNotEmpty) {
+    result.add(
+        Utterance(parts.join(inPersian ? '، ' : ', '), inPersian ? 'fa-IR' : 'en-US'));
+  }
   return result;
 }

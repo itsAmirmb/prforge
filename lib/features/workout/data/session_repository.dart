@@ -339,10 +339,23 @@ class SessionRepository {
   /// Uses the plan's rest and, inside a superset, the group's rest values
   /// (between members, and after the last set of a round).
   Future<int?> restAfterCompleting(int setId,
-      {int defaultRest = defaultRestSeconds}) async {
+      {int defaultRest = defaultRestSeconds,
+      int exerciseChangeRest = 0}) async {
     final log = await (_db.select(_db.setLogs)..where((l) => l.id.equals(setId)))
         .getSingleOrNull();
     if (log == null || !log.isCompleted) return null;
+
+    // Sets still to do in this workout: the exercise (or superset) just
+    // finished, with something else left, means "between two exercises".
+    final remaining = await (_db.select(_db.setLogs)
+          ..where((l) =>
+              l.sessionId.equals(log.sessionId) & l.isCompleted.equals(false)))
+        .get();
+    final key0 = log.supersetKey;
+    final sameBlockLeft = remaining.any((s) => key0 == null
+        ? s.supersetKey == null && s.exerciseId == log.exerciseId
+        : s.supersetKey == key0);
+    final endsExercise = remaining.isNotEmpty && !sameBlockLeft;
 
     final prescriptionId = log.prescriptionId;
     final prescription = prescriptionId == null
@@ -357,7 +370,9 @@ class SessionRepository {
           isSuperset: false,
           roundComplete: true,
           setRest: prescription?.restSeconds,
-          defaultRest: defaultRest);
+          defaultRest: defaultRest,
+          endsExercise: endsExercise,
+          exerciseChangeRest: exerciseChangeRest);
     }
 
     // The key is 's{groupId}' (see startSession).
@@ -383,6 +398,8 @@ class SessionRepository {
       betweenRest: group?.restBetweenSeconds,
       afterRoundRest: group?.restAfterRoundSeconds,
       defaultRest: defaultRest,
+      endsExercise: endsExercise,
+      exerciseChangeRest: exerciseChangeRest,
     );
   }
 

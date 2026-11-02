@@ -132,8 +132,10 @@ class WorkoutSessionScreen extends ConsumerWidget {
           ),
         ],
       ),
-      bottomNavigationBar: const RestTimerBar(),
-      body: entriesAsync.when(
+      body: Column(children: [
+        const RestTimerBar(),
+        Expanded(
+            child: entriesAsync.when(
         loading: () => const LoadingState(),
         error: (e, _) => ErrorState(e),
         data: (list) => ReorderableListView.builder(
@@ -191,7 +193,8 @@ class WorkoutSessionScreen extends ConsumerWidget {
             ],
           ),
         ),
-      ),
+      )),
+      ]),
     ));
   }
 }

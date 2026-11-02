@@ -8,10 +8,8 @@ void main() {
   });
 
   test('formatDateTime pads minutes', () {
-    expect(
-      formatDateTime(DateTime(2026, 10, 11, 9, 5)),
-      'Sun, 11 Oct 2026 · 09:05',
-    );
+    expect(formatDateTime(DateTime(2026, 10, 11, 9, 5)),
+        'Sun, 11 Oct 2026 · 09:05');
   });
 
   test('formatDuration', () {

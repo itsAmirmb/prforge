@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
+/// Language of the spoken numbers and units (Settings > Voice).
+enum SpeechLanguage { english, persian }
+
 /// One piece of speech and the language it is spoken in (e.g. "en-US").
 class Utterance {
   const Utterance(this.text, this.language);

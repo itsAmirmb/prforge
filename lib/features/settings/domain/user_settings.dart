@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart' show ThemeMode;
 
+import '../../../core/feedback/speech_service.dart' show SpeechLanguage;
 import '../../workout/domain/rest_timing.dart';
 
 /// Keys of the settings rows.
 abstract final class SettingKeys {
   static const restSeconds = 'restSeconds';
+  static const restBetweenExercises = 'restBetweenExercises';
+  static const speechLanguage = 'speechLanguage';
   static const sound = 'sound';
   static const vibration = 'vibration';
   static const keepScreenOn = 'keepScreenOn';
@@ -31,6 +34,8 @@ const maxDefaultRestSeconds = 600;
 class UserSettings {
   const UserSettings({
     this.restSeconds = defaultRestSeconds,
+    this.restBetweenExercises = 0,
+    this.speechLanguage = SpeechLanguage.english,
     this.sound = true,
     this.vibration = true,
     this.keepScreenOn = true,
@@ -50,6 +55,13 @@ class UserSettings {
 
   /// Rest after a set when the plan gives none. 0 = no rest timer.
   final int restSeconds;
+
+  /// Rest after the last set of an exercise when another exercise follows.
+  /// 0 = off: the usual rest applies.
+  final int restBetweenExercises;
+
+  /// Language of the numbers and units when the next set is spoken.
+  final SpeechLanguage speechLanguage;
   final bool sound;
   final bool vibration;
 
@@ -88,7 +100,15 @@ class UserSettings {
     }
 
     final rest = int.tryParse(map[SettingKeys.restSeconds] ?? '');
+    final between = int.tryParse(map[SettingKeys.restBetweenExercises] ?? '');
     return UserSettings(
+      restBetweenExercises:
+          between == null || between < 0 || between > maxDefaultRestSeconds
+              ? 0
+              : between,
+      speechLanguage:
+          SpeechLanguage.values.asNameMap()[map[SettingKeys.speechLanguage]] ??
+              SpeechLanguage.english,
       restSeconds: rest == null || rest < 0 || rest > maxDefaultRestSeconds
           ? defaultRestSeconds
           : rest,

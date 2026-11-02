@@ -8,6 +8,9 @@ const defaultRestSeconds = 90;
 /// - Last set of a superset round: [afterRoundRest], else the plan's rest,
 ///   else [defaultRest].
 ///
+/// When [endsExercise] (the last set of an exercise, with another exercise
+/// still to come) and [exerciseChangeRest] > 0, that rest is used instead.
+///
 /// A value of 0 means "no rest".
 int? restSecondsAfterSet({
   required bool isSuperset,
@@ -16,6 +19,8 @@ int? restSecondsAfterSet({
   int? betweenRest,
   int? afterRoundRest,
   int defaultRest = defaultRestSeconds,
+  bool endsExercise = false,
+  int exerciseChangeRest = 0,
 }) {
   int? resolve(List<int?> candidates) {
     for (final c in candidates) {
@@ -24,9 +29,13 @@ int? restSecondsAfterSet({
     return defaultRest > 0 ? defaultRest : null;
   }
 
-  if (!isSuperset) return resolve([setRest]);
+  if (!isSuperset) {
+    if (endsExercise && exerciseChangeRest > 0) return exerciseChangeRest;
+    return resolve([setRest]);
+  }
   if (!roundComplete) {
     return (betweenRest != null && betweenRest > 0) ? betweenRest : null;
   }
+  if (endsExercise && exerciseChangeRest > 0) return exerciseChangeRest;
   return resolve([afterRoundRest, setRest]);
 }

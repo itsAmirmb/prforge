@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' show ThemeMode;
 
 import '../../../core/database/app_database.dart';
+import '../../../core/feedback/speech_service.dart' show SpeechLanguage;
 import '../domain/user_settings.dart';
 
 class SettingsRepository {
@@ -19,6 +20,14 @@ class SettingsRepository {
   /// Clamped to 0..[maxDefaultRestSeconds].
   Future<void> setRestSeconds(int seconds) => _put(SettingKeys.restSeconds,
       seconds.clamp(0, maxDefaultRestSeconds).toString());
+
+  /// Clamped to 0..[maxDefaultRestSeconds]; 0 = off.
+  Future<void> setRestBetweenExercises(int seconds) => _put(
+      SettingKeys.restBetweenExercises,
+      seconds.clamp(0, maxDefaultRestSeconds).toString());
+
+  Future<void> setSpeechLanguage(SpeechLanguage language) =>
+      _put(SettingKeys.speechLanguage, language.name);
 
   Future<void> setSound(bool on) => _put(SettingKeys.sound, on.toString());
 
