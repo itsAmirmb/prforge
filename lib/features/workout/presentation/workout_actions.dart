@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
@@ -25,6 +27,49 @@ class WorkoutActions {
         defaultRest: settings.restSeconds,
         exerciseChangeRest: settings.restBetweenExercises);
     if (rest != null) _ref.read(restTimerProvider.notifier).start(rest);
+    unawaited(_announceNewExercise(log));
+  }
+
+  /// Right after a set: if the next set belongs to a different exercise, says
+  /// its name now (it is said again, with the reps, when the rest is over).
+  Future<void> _announceNewExercise(SetLog done) async {
+    final settings = _ref.read(userSettingsProvider);
+    if (!settings.speakExerciseName) return;
+    final entries =
+        await _ref.read(sessionEntriesProvider(done.sessionId).future);
+    // The stream may not have caught up with the write yet: count [done] as
+    // finished ourselves.
+    final ordered = [
+      for (final s in performingOrder(entries))
+        s.id == done.id ? s.copyWith(isCompleted: true) : s,
+    ];
+    final nextId = currentSetIdOf(ordered);
+    if (nextId == null) return;
+    final next = ordered.firstWhere((s) => s.id == nextId);
+    if (next.exerciseId == done.exerciseId) return;
+    final name = [
+      for (final e in entries)
+        for (final b in e.blocks)
+          if (b.exercise.id == next.exerciseId) b.exercise.name,
+    ].firstOrNull;
+    if (name == null) return;
+
+    final speech = _ref.read(speechServiceProvider);
+    final utterances = buildAnnouncement(
+      exerciseName: name,
+      exerciseChanged: true,
+      weightKg: null,
+      reps: null,
+      sayName: true,
+      sayWeight: false,
+      sayReps: false,
+      persianAvailable: await speech.persianAvailable,
+    );
+    // Let the tick / headset beep finish first.
+    if (settings.sound) {
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+    }
+    await speech.speakAll(utterances);
   }
 
   /// Completes the set to do next in the active workout (the highlighted
