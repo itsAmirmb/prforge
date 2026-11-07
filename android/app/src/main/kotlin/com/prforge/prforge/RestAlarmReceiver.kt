@@ -6,11 +6,10 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.media.AudioManager
-import android.media.ToneGenerator
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.app.Notification
@@ -22,10 +21,14 @@ import android.app.Notification
 class RestAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pending = goAsync()
+        if (intent.getBooleanExtra("warning", false)) {
+            countdown(context, intent, pending)
+            return
+        }
         val sound = intent.getBooleanExtra("sound", true)
         val vibration = intent.getBooleanExtra("vibration", true)
-        if (vibration) vibrate(context)
-        if (sound) beep()
+        if (vibration) vibrate(context, longArrayOf(0, 300, 150, 300))
+        if (sound) Tones.play("final")
         notify(
             context,
             intent.getStringExtra("title") ?: "",
@@ -35,25 +38,41 @@ class RestAlarmReceiver : BroadcastReceiver() {
         Handler(Looper.getMainLooper()).postDelayed({ pending.finish() }, 900)
     }
 
+    // Beeps once a second for the last seconds of the rest ("ding ding ding");
+    // the long final beep comes from the end alarm. A wake lock keeps the
+    // phone awake for these few seconds while the screen is off.
+    private fun countdown(
+        context: Context,
+        intent: Intent,
+        pending: PendingResult
+    ) {
+        val count = intent.getIntExtra("warnCount", 1).coerceIn(1, 8)
+        val sound = intent.getBooleanExtra("sound", true)
+        val vibration = intent.getBooleanExtra("vibration", true)
+        val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val lock = power?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "prforge:countdown")
+        lock?.acquire(count * 1000L + 1500L)
+        val handler = Handler(Looper.getMainLooper())
+        for (i in 0 until count) {
+            handler.postDelayed({
+                if (sound) Tones.play("tick")
+                if (vibration) vibrate(context, longArrayOf(0, 40))
+            }, i * 1000L)
+        }
+        handler.postDelayed({
+            if (lock?.isHeld == true) lock.release()
+            pending.finish()
+        }, count * 1000L)
+    }
+
     @Suppress("DEPRECATION")
-    private fun vibrate(context: Context) {
+    private fun vibrate(context: Context, pattern: LongArray) {
         val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
         if (!vibrator.hasVibrator()) return
-        val pattern = longArrayOf(0, 300, 150, 300)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
         } else {
             vibrator.vibrate(pattern, -1)
-        }
-    }
-
-    private fun beep() {
-        try {
-            val tone = ToneGenerator(AudioManager.STREAM_MUSIC, 80)
-            tone.startTone(ToneGenerator.TONE_PROP_BEEP2, 400)
-            Handler(Looper.getMainLooper()).postDelayed({ tone.release() }, 700)
-        } catch (_: RuntimeException) {
-            // No audio output available: stay silent.
         }
     }
 

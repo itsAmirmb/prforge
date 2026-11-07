@@ -7,6 +7,7 @@ import '../../workout/domain/rest_timing.dart';
 abstract final class SettingKeys {
   static const restSeconds = 'restSeconds';
   static const restBetweenExercises = 'restBetweenExercises';
+  static const restWarnSeconds = 'restWarnSeconds';
   static const speechLanguage = 'speechLanguage';
   static const sound = 'sound';
   static const vibration = 'vibration';
@@ -27,6 +28,9 @@ abstract final class SettingKeys {
 const minPlateauWeeks = 1, maxPlateauWeeks = 12;
 const minPlateauSessions = 2, maxPlateauSessions = 10;
 
+/// Longest countdown before a rest ends (seconds); 0 = off.
+const maxRestWarnSeconds = 8;
+
 /// Longest default rest that can be set (10 minutes).
 const maxDefaultRestSeconds = 600;
 
@@ -35,6 +39,7 @@ class UserSettings {
   const UserSettings({
     this.restSeconds = defaultRestSeconds,
     this.restBetweenExercises = 0,
+    this.restWarnSeconds = 5,
     this.speechLanguage = SpeechLanguage.english,
     this.sound = true,
     this.vibration = true,
@@ -59,6 +64,10 @@ class UserSettings {
   /// Rest after the last set of an exercise when another exercise follows.
   /// 0 = off: the usual rest applies.
   final int restBetweenExercises;
+
+  /// Countdown beeps, one per second, for this many seconds before a rest
+  /// ends. 0 = off.
+  final int restWarnSeconds;
 
   /// Language of the numbers and units when the next set is spoken.
   final SpeechLanguage speechLanguage;
@@ -102,6 +111,8 @@ class UserSettings {
     final rest = int.tryParse(map[SettingKeys.restSeconds] ?? '');
     final between = int.tryParse(map[SettingKeys.restBetweenExercises] ?? '');
     return UserSettings(
+      restWarnSeconds:
+          inRange(SettingKeys.restWarnSeconds, 0, maxRestWarnSeconds, 5),
       restBetweenExercises:
           between == null || between < 0 || between > maxDefaultRestSeconds
               ? 0

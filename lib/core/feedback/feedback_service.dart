@@ -16,6 +16,7 @@ class FeedbackService {
   /// Vibration patterns in ms: off, on, off, on ...
   static const tickPattern = [0, 40];
   static const restOverPattern = [0, 300, 150, 300];
+  static const warningPattern = [0, 40];
 
   final MethodChannel _channel;
 
@@ -36,9 +37,10 @@ class FeedbackService {
     }
   }
 
-  Future<void> _beep() async {
+  /// [kind]: 'tick' (short, low), 'final' (long, high) or the default beep.
+  Future<void> _beep([String kind = 'default']) async {
     try {
-      await _channel.invokeMethod<void>('beep');
+      await _channel.invokeMethod<void>('beep', kind);
     } on MissingPluginException {
       await _safely(() => SystemSound.play(SystemSoundType.click));
     } on PlatformException {
@@ -59,14 +61,16 @@ class FeedbackService {
   /// The rest is over: double buzz and beep, as enabled.
   Future<void> restOver({required bool sound, required bool vibration}) async {
     if (vibration) await _vibrate(restOverPattern);
-    if (sound) await _beep();
+    if (sound) await _beep('final');
   }
 
   /// Asks the OS to play the rest-over beep/vibration and show a notification
-  /// at [endsAt], even with the screen off (a Dart timer does not run then).
+  /// at [endsAt] (and a short warning beep at [warnAt]), even with the screen off (a Dart timer does not run then).
   /// Scheduling again replaces the previous alarm.
   Future<void> scheduleRestEnd({
     required DateTime endsAt,
+    DateTime? warnAt,
+    int warnSeconds = 0,
     required bool sound,
     required bool vibration,
     required String title,
@@ -74,6 +78,8 @@ class FeedbackService {
   }) =>
       _invokeQuietly('scheduleRestEnd', {
         'atMillis': endsAt.millisecondsSinceEpoch,
+        'warnAtMillis': warnAt?.millisecondsSinceEpoch,
+        'warnSeconds': warnSeconds,
         'sound': sound,
         'vibration': vibration,
         'title': title,
@@ -94,6 +100,13 @@ class FeedbackService {
     } on PlatformException {
       // Ignore: feedback must never break a workout.
     }
+  }
+
+  /// One count of the countdown in the last seconds of a rest.
+  Future<void> restCountdownTick(
+      {required bool sound, required bool vibration}) async {
+    if (vibration) await _vibrate(warningPattern);
+    if (sound) await _beep('tick');
   }
 
   Future<void> keepScreenOn(bool on) async {

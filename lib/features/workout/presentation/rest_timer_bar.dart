@@ -29,15 +29,19 @@ class RestTimerBar extends ConsumerStatefulWidget {
 class _RestTimerBarState extends ConsumerState<RestTimerBar> {
   Timer? _ticker;
 
+  /// Whole seconds left at the previous tick, to notice each new second.
+  int? _prevSecondsLeft;
+
   @override
   void initState() {
     super.initState();
     // Tick only while a timer is running.
     ref.listenManual<RestTimerState?>(restTimerProvider, (_, next) {
       _ticker?.cancel();
+      _prevSecondsLeft = null;
       _ticker = next == null
           ? null
-          : Timer.periodic(const Duration(milliseconds: 500), (_) => _tick());
+          : Timer.periodic(const Duration(milliseconds: 250), (_) => _tick());
     }, fireImmediately: true);
   }
 
@@ -54,8 +58,26 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
       }
       ref.read(restTimerProvider.notifier).stop();
       ref.read(workoutActionsProvider).announceNext();
-    } else if (mounted) {
-      setState(() {});
+    } else {
+      _countdownIfDue(timer.remaining());
+      if (mounted) setState(() {});
+    }
+  }
+
+  /// One tick per second for the last seconds, like a race start; the long
+  /// final beep is the rest-over beep. Only ticks seen here are played: if the
+  /// app was in the background the OS alarm played them.
+  void _countdownIfDue(Duration remaining) {
+    final secondsLeft = (remaining.inMilliseconds + 999) ~/ 1000;
+    final previous = _prevSecondsLeft;
+    _prevSecondsLeft = secondsLeft;
+    final settings = ref.read(userSettingsProvider);
+    if (previous != null &&
+        secondsLeft < previous &&
+        secondsLeft >= 1 &&
+        secondsLeft <= settings.restWarnSeconds) {
+      ref.read(feedbackServiceProvider).restCountdownTick(
+          sound: settings.sound, vibration: settings.vibration);
     }
   }
 

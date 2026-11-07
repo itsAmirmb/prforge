@@ -38,8 +38,12 @@ class RestAlarmController with WidgetsBindingObserver {
   void _schedule(RestTimerState timer) {
     final settings = _ref.read(userSettingsProvider);
     _armed = true;
+    final warn = settings.restWarnSeconds;
+    final warnAt = warn > 0 ? timer.endsAt.subtract(Duration(seconds: warn)) : null;
     _feedback.scheduleRestEnd(
       endsAt: timer.endsAt,
+      warnSeconds: warn,
+      warnAt: warnAt != null && warnAt.isAfter(DateTime.now()) ? warnAt : null,
       sound: settings.sound,
       vibration: settings.vibration,
       title: 'Rest is over',

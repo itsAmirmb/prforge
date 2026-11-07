@@ -26,6 +26,10 @@ class SettingsRepository {
       SettingKeys.restBetweenExercises,
       seconds.clamp(0, maxDefaultRestSeconds).toString());
 
+  Future<void> setRestWarnSeconds(int seconds) => _put(
+      SettingKeys.restWarnSeconds,
+      seconds.clamp(0, maxRestWarnSeconds).toString());
+
   Future<void> setSpeechLanguage(SpeechLanguage language) =>
       _put(SettingKeys.speechLanguage, language.name);
 

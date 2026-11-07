@@ -26,12 +26,20 @@ class WorkoutActions {
     final rest = await repo.restAfterCompleting(log.id,
         defaultRest: settings.restSeconds,
         exerciseChangeRest: settings.restBetweenExercises);
-    if (rest != null) _ref.read(restTimerProvider.notifier).start(rest);
-    unawaited(_announceNewExercise(log));
+    if (rest != null) {
+      _ref.read(restTimerProvider.notifier).start(rest);
+      unawaited(_announceNewExercise(log));
+    } else {
+      // No rest (e.g. between the members of a superset): nothing will fire
+      // when a rest is over, so announce the next set right away.
+      unawaited(announceNext(justDone: log));
+    }
   }
 
-  /// Right after a set: if the next set belongs to a different exercise, says
-  /// its name now (it is said again, with the reps, when the rest is over).
+  /// Right after a set: if the next set leaves this exercise (or superset)
+  /// for another one, says its name now (it is said again, with the reps,
+  /// when the rest is over). Inside a superset the rest-over announcement
+  /// already covers the switch from one member to the next.
   Future<void> _announceNewExercise(SetLog done) async {
     final settings = _ref.read(userSettingsProvider);
     if (!settings.speakExerciseName) return;
@@ -47,6 +55,9 @@ class WorkoutActions {
     if (nextId == null) return;
     final next = ordered.firstWhere((s) => s.id == nextId);
     if (next.exerciseId == done.exerciseId) return;
+    if (done.supersetKey != null && next.supersetKey == done.supersetKey) {
+      return;
+    }
     final name = [
       for (final e in entries)
         for (final b in e.blocks)
@@ -91,8 +102,11 @@ class WorkoutActions {
         .setDoneAudible(sound: _ref.read(userSettingsProvider).sound);
   }
 
-  /// Speaks the next set when a rest is over (see Settings > Voice).
-  Future<void> announceNext() async {
+  /// Speaks the next set when a rest is over, or right after a set when there
+  /// is no rest (see Settings > Voice). Pass [justDone] when called straight
+  /// after completing a set: the entries stream may not have caught up with
+  /// the write yet, so that set is counted as finished here.
+  Future<void> announceNext({SetLog? justDone}) async {
     final settings = _ref.read(userSettingsProvider);
     if (!(settings.speakReps ||
         settings.speakWeight ||
@@ -104,17 +118,24 @@ class WorkoutActions {
     if (session == null) return;
     final entries =
         await _ref.read(sessionEntriesProvider(session.id).future);
-    final ordered = performingOrder(entries);
+    final ordered = [
+      for (final s in performingOrder(entries))
+        justDone != null && s.id == justDone.id
+            ? s.copyWith(isCompleted: true)
+            : s,
+    ];
     final nextId = currentSetIdOf(ordered);
     if (nextId == null) return;
     final next = ordered.firstWhere((s) => s.id == nextId);
 
-    SetLog? previous;
-    for (final s in ordered) {
-      final t = s.completedAt;
-      if (!s.isCompleted || t == null) continue;
-      final p = previous?.completedAt;
-      if (p == null || t.isAfter(p)) previous = s;
+    SetLog? previous = justDone;
+    if (previous == null) {
+      for (final s in ordered) {
+        final t = s.completedAt;
+        if (!s.isCompleted || t == null) continue;
+        final p = previous?.completedAt;
+        if (p == null || t.isAfter(p)) previous = s;
+      }
     }
     final name = [
       for (final e in entries)

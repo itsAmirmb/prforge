@@ -177,6 +177,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 seconds: settings.restSeconds,
                 onChanged: ref.read(settingsRepositoryProvider).setRestSeconds,
               ),
+              _StepperTile(
+                icon: Icons.notifications_active_outlined,
+                title: 'Countdown before rest ends (0 = off)',
+                unit: 'seconds',
+                value: settings.restWarnSeconds,
+                min: 0,
+                max: maxRestWarnSeconds,
+                onChanged:
+                    ref.read(settingsRepositoryProvider).setRestWarnSeconds,
+              ),
               _RestTile(
                 title: 'Rest between exercises',
                 subtitle: 'After the last set of an exercise. Off = usual rest',
