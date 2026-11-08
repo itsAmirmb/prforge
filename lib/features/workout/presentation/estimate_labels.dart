@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../programs/data/prescription_repository.dart';
 import '../../programs/presentation/prescription_providers.dart';
 import '../../settings/presentation/settings_providers.dart';
 import '../domain/duration_estimate.dart';
@@ -85,20 +86,18 @@ class _RemainingEstimateChipState extends ConsumerState<RemainingEstimateChip> {
       return const SizedBox.shrink();
     }
     final dayId = session.workoutDayId;
-    final prescriptions = dayId == null
-        ? const <int, ExercisePrescription>{}
-        : {
-            for (final i
-                in ref.watch(dayPrescriptionsProvider(dayId)).value ?? const [])
-              i.prescription.id: i.prescription,
-          };
-    final groups = dayId == null
-        ? const <int, SupersetGroup>{}
-        : {
-            for (final g in ref.watch(daySupersetGroupsProvider(dayId)).value ??
-                const <SupersetGroup>[])
-              g.id: g,
-          };
+    final prescriptions = <int, ExercisePrescription>{};
+    final groups = <int, SupersetGroup>{};
+    if (dayId != null) {
+      for (final i in ref.watch(dayPrescriptionsProvider(dayId)).value ??
+          const <PrescriptionWithExercise>[]) {
+        prescriptions[i.prescription.id] = i.prescription;
+      }
+      for (final g in ref.watch(daySupersetGroupsProvider(dayId)).value ??
+          const <SupersetGroup>[]) {
+        groups[g.id] = g;
+      }
+    }
 
     final todo = estimateSetsForSession(performingOrder(entries),
         prescriptions: prescriptions, groups: groups);
