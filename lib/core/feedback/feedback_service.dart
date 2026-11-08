@@ -65,12 +65,11 @@ class FeedbackService {
   }
 
   /// Asks the OS to play the rest-over beep/vibration and show a notification
-  /// at [endsAt] (and a short warning beep at [warnAt]), even with the screen off (a Dart timer does not run then).
+  /// at [endsAt] (and a short countdown beep at each of [tickAts]), even with the screen off (a Dart timer does not run then).
   /// Scheduling again replaces the previous alarm.
   Future<void> scheduleRestEnd({
     required DateTime endsAt,
-    DateTime? warnAt,
-    int warnSeconds = 0,
+    List<DateTime> tickAts = const [],
     required bool sound,
     required bool vibration,
     required String title,
@@ -78,8 +77,7 @@ class FeedbackService {
   }) =>
       _invokeQuietly('scheduleRestEnd', {
         'atMillis': endsAt.millisecondsSinceEpoch,
-        'warnAtMillis': warnAt?.millisecondsSinceEpoch,
-        'warnSeconds': warnSeconds,
+        'tickAtMillis': [for (final t in tickAts) t.millisecondsSinceEpoch],
         'sound': sound,
         'vibration': vibration,
         'title': title,

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/feedback/feedback_service.dart';
 import '../../settings/presentation/settings_providers.dart';
+import '../domain/rest_countdown.dart';
 import 'rest_alarm.dart';
 import 'rest_timer_state.dart';
 import 'workout_actions.dart';
@@ -29,8 +30,8 @@ class RestTimerBar extends ConsumerStatefulWidget {
 class _RestTimerBarState extends ConsumerState<RestTimerBar> {
   Timer? _ticker;
 
-  /// Whole seconds left at the previous tick, to notice each new second.
-  int? _prevSecondsLeft;
+  /// Time left at the previous tick, to notice crossing a countdown beep.
+  Duration? _prevRemaining;
 
   @override
   void initState() {
@@ -38,7 +39,7 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
     // Tick only while a timer is running.
     ref.listenManual<RestTimerState?>(restTimerProvider, (_, next) {
       _ticker?.cancel();
-      _prevSecondsLeft = null;
+      _prevRemaining = null;
       _ticker = next == null
           ? null
           : Timer.periodic(const Duration(milliseconds: 250), (_) => _tick());
@@ -59,23 +60,27 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
       ref.read(restTimerProvider.notifier).stop();
       ref.read(workoutActionsProvider).announceNext();
     } else {
-      _countdownIfDue(timer.remaining());
+      _countdownIfDue(timer);
       if (mounted) setState(() {});
     }
   }
 
-  /// One tick per second for the last seconds, like a race start; the long
-  /// final beep is the rest-over beep. Only ticks seen here are played: if the
-  /// app was in the background the OS alarm played them.
-  void _countdownIfDue(Duration remaining) {
-    final secondsLeft = (remaining.inMilliseconds + 999) ~/ 1000;
-    final previous = _prevSecondsLeft;
-    _prevSecondsLeft = secondsLeft;
+  /// Plays a countdown beep when the time left drops below one of the beep
+  /// points (see countdownTicks); the long final beep is the rest-over beep.
+  /// Only beeps seen here are played: if the app was in the background the
+  /// OS alarms played them.
+  void _countdownIfDue(RestTimerState timer) {
+    final remaining = timer.remaining();
+    final previous = _prevRemaining;
+    _prevRemaining = remaining;
+    if (previous == null) return;
     final settings = ref.read(userSettingsProvider);
-    if (previous != null &&
-        secondsLeft < previous &&
-        secondsLeft >= 1 &&
-        secondsLeft <= settings.restWarnSeconds) {
+    final due = countdownTicks(
+      style: settings.countdownStyle,
+      seconds: settings.restWarnSeconds,
+      totalSeconds: timer.totalSeconds,
+    ).any((t) => previous > t && remaining <= t);
+    if (due) {
       ref.read(feedbackServiceProvider).restCountdownTick(
           sound: settings.sound, vibration: settings.vibration);
     }

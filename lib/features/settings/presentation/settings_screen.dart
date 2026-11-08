@@ -18,6 +18,7 @@ import '../../../core/widgets/state_views.dart';
 import '../../../core/feedback/feedback_service.dart';
 import '../../../core/feedback/speech_service.dart';
 import '../../workout/domain/rest_announcement.dart';
+import '../../workout/domain/rest_countdown.dart';
 import '../domain/user_settings.dart';
 import 'settings_providers.dart';
 import '../../workout/presentation/rest_timer_bar.dart' show formatRest;
@@ -177,16 +178,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 seconds: settings.restSeconds,
                 onChanged: ref.read(settingsRepositoryProvider).setRestSeconds,
               ),
-              _StepperTile(
-                icon: Icons.notifications_active_outlined,
-                title: 'Countdown before rest ends (0 = off)',
-                unit: 'seconds',
-                value: settings.restWarnSeconds,
-                min: 0,
-                max: maxRestWarnSeconds,
-                onChanged:
-                    ref.read(settingsRepositoryProvider).setRestWarnSeconds,
+              ListTile(
+                leading: const Icon(Icons.notifications_active_outlined),
+                title: const Text('Countdown before rest ends'),
+                subtitle: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: SegmentedButton<CountdownStyle>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(
+                          value: CountdownStyle.off, label: Text('Off')),
+                      ButtonSegment(
+                          value: CountdownStyle.seconds,
+                          label: Text('Every second')),
+                      ButtonSegment(
+                          value: CountdownStyle.halving,
+                          label: Text('Halving')),
+                    ],
+                    selected: {settings.countdownStyle},
+                    onSelectionChanged: (s) => ref
+                        .read(settingsRepositoryProvider)
+                        .setCountdownStyle(s.first),
+                  ),
+                ),
               ),
+              if (settings.countdownStyle == CountdownStyle.seconds)
+                _StepperTile(
+                  icon: Icons.timelapse,
+                  title: 'Countdown length',
+                  unit: 'seconds',
+                  value: settings.restWarnSeconds,
+                  min: minRestWarnSeconds,
+                  max: maxRestWarnSeconds,
+                  onChanged:
+                      ref.read(settingsRepositoryProvider).setRestWarnSeconds,
+                ),
+              if (settings.countdownStyle == CountdownStyle.halving)
+                const ListTile(
+                  dense: true,
+                  title: Text(
+                      'One beep at half of the rest, then at half of what is '
+                      'left, getting faster until the rest is over.'),
+                ),
               _RestTile(
                 title: 'Rest between exercises',
                 subtitle: 'After the last set of an exercise. Off = usual rest',

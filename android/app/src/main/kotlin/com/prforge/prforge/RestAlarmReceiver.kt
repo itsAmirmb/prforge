@@ -9,7 +9,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.app.Notification
@@ -22,7 +21,10 @@ class RestAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pending = goAsync()
         if (intent.getBooleanExtra("warning", false)) {
-            countdown(context, intent, pending)
+            // One countdown beep; the long final beep comes from the end alarm.
+            if (intent.getBooleanExtra("vibration", true)) vibrate(context, longArrayOf(0, 40))
+            if (intent.getBooleanExtra("sound", true)) Tones.play("tick")
+            Handler(Looper.getMainLooper()).postDelayed({ pending.finish() }, 400)
             return
         }
         val sound = intent.getBooleanExtra("sound", true)
@@ -36,33 +38,6 @@ class RestAlarmReceiver : BroadcastReceiver() {
         )
         // Keep the receiver alive until the tone has finished.
         Handler(Looper.getMainLooper()).postDelayed({ pending.finish() }, 900)
-    }
-
-    // Beeps once a second for the last seconds of the rest ("ding ding ding");
-    // the long final beep comes from the end alarm. A wake lock keeps the
-    // phone awake for these few seconds while the screen is off.
-    private fun countdown(
-        context: Context,
-        intent: Intent,
-        pending: PendingResult
-    ) {
-        val count = intent.getIntExtra("warnCount", 1).coerceIn(1, 8)
-        val sound = intent.getBooleanExtra("sound", true)
-        val vibration = intent.getBooleanExtra("vibration", true)
-        val power = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
-        val lock = power?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "prforge:countdown")
-        lock?.acquire(count * 1000L + 1500L)
-        val handler = Handler(Looper.getMainLooper())
-        for (i in 0 until count) {
-            handler.postDelayed({
-                if (sound) Tones.play("tick")
-                if (vibration) vibrate(context, longArrayOf(0, 40))
-            }, i * 1000L)
-        }
-        handler.postDelayed({
-            if (lock?.isHeld == true) lock.release()
-            pending.finish()
-        }, count * 1000L)
     }
 
     @Suppress("DEPRECATION")

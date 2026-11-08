@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' show ThemeMode;
 
 import '../../../core/database/app_database.dart';
 import '../../../core/feedback/speech_service.dart' show SpeechLanguage;
+import '../../workout/domain/rest_countdown.dart';
 import '../domain/user_settings.dart';
 
 class SettingsRepository {
@@ -28,7 +29,10 @@ class SettingsRepository {
 
   Future<void> setRestWarnSeconds(int seconds) => _put(
       SettingKeys.restWarnSeconds,
-      seconds.clamp(0, maxRestWarnSeconds).toString());
+      seconds.clamp(minRestWarnSeconds, maxRestWarnSeconds).toString());
+
+  Future<void> setCountdownStyle(CountdownStyle style) =>
+      _put(SettingKeys.countdownStyle, style.name);
 
   Future<void> setSpeechLanguage(SpeechLanguage language) =>
       _put(SettingKeys.speechLanguage, language.name);

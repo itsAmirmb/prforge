@@ -90,7 +90,7 @@ class MainActivity : FlutterActivity() {
 
     // ───────── Rest-over alarm (works with the screen off) ─────────
 
-    // Request code 1 = rest over, 2 = short warning before it.
+    // Request code 1 = rest over, TICK_CODE + n = countdown beep n.
     private fun restAlarmIntent(
         extras: Map<*, *>?,
         code: Int = 1,
@@ -103,7 +103,6 @@ class MainActivity : FlutterActivity() {
             intent.putExtra("vibration", extras["vibration"] as? Boolean ?: true)
             intent.putExtra("title", extras["title"] as? String ?: "")
             intent.putExtra("body", extras["body"] as? String ?: "")
-            intent.putExtra("warnCount", (extras["warnSeconds"] as? Number)?.toInt() ?: 1)
         }
         return PendingIntent.getBroadcast(
             this, code, intent,
@@ -129,18 +128,22 @@ class MainActivity : FlutterActivity() {
             }
         }
         set(at, restAlarmIntent(args))
-        val warnAt = (args["warnAtMillis"] as? Number)?.toLong()
-        if (warnAt != null) {
-            set(warnAt, restAlarmIntent(args, 2, true))
-        } else {
-            alarms.cancel(restAlarmIntent(null, 2, true))
+        // One alarm per countdown beep.
+        cancelTickAlarms(alarms)
+        val ticks = (args?.get("tickAtMillis") as? List<*>)?.mapNotNull { (it as? Number)?.toLong() }
+        ticks?.take(MAX_TICKS)?.forEachIndexed { i, time ->
+            set(time, restAlarmIntent(args, TICK_CODE + i, true))
         }
+    }
+
+    private fun cancelTickAlarms(alarms: AlarmManager) {
+        for (i in 0 until MAX_TICKS) alarms.cancel(restAlarmIntent(null, TICK_CODE + i, true))
     }
 
     private fun cancelRestEnd() {
         val alarms = getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         alarms.cancel(restAlarmIntent(null))
-        alarms.cancel(restAlarmIntent(null, 2, true))
+        cancelTickAlarms(alarms)
     }
 
     // Only the notification needs this; sound and vibration work without it.
@@ -151,5 +154,10 @@ class MainActivity : FlutterActivity() {
         ) {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 7)
         }
+    }
+
+    companion object {
+        private const val TICK_CODE = 10
+        private const val MAX_TICKS = 16
     }
 }

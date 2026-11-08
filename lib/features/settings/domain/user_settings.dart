@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' show ThemeMode;
 
 import '../../../core/feedback/speech_service.dart' show SpeechLanguage;
+import '../../workout/domain/rest_countdown.dart';
 import '../../workout/domain/rest_timing.dart';
 
 /// Keys of the settings rows.
@@ -8,6 +9,7 @@ abstract final class SettingKeys {
   static const restSeconds = 'restSeconds';
   static const restBetweenExercises = 'restBetweenExercises';
   static const restWarnSeconds = 'restWarnSeconds';
+  static const countdownStyle = 'countdownStyle';
   static const speechLanguage = 'speechLanguage';
   static const sound = 'sound';
   static const vibration = 'vibration';
@@ -28,8 +30,8 @@ abstract final class SettingKeys {
 const minPlateauWeeks = 1, maxPlateauWeeks = 12;
 const minPlateauSessions = 2, maxPlateauSessions = 10;
 
-/// Longest countdown before a rest ends (seconds); 0 = off.
-const maxRestWarnSeconds = 8;
+/// Countdown length in seconds for [CountdownStyle.seconds].
+const minRestWarnSeconds = 1, maxRestWarnSeconds = 8;
 
 /// Longest default rest that can be set (10 minutes).
 const maxDefaultRestSeconds = 600;
@@ -40,6 +42,7 @@ class UserSettings {
     this.restSeconds = defaultRestSeconds,
     this.restBetweenExercises = 0,
     this.restWarnSeconds = 5,
+    this.countdownStyle = CountdownStyle.seconds,
     this.speechLanguage = SpeechLanguage.english,
     this.sound = true,
     this.vibration = true,
@@ -65,9 +68,10 @@ class UserSettings {
   /// 0 = off: the usual rest applies.
   final int restBetweenExercises;
 
-  /// Countdown beeps, one per second, for this many seconds before a rest
-  /// ends. 0 = off.
+  /// Countdown before a rest ends: how, and (for one beep per second) for how
+  /// many seconds.
   final int restWarnSeconds;
+  final CountdownStyle countdownStyle;
 
   /// Language of the numbers and units when the next set is spoken.
   final SpeechLanguage speechLanguage;
@@ -111,8 +115,14 @@ class UserSettings {
     final rest = int.tryParse(map[SettingKeys.restSeconds] ?? '');
     final between = int.tryParse(map[SettingKeys.restBetweenExercises] ?? '');
     return UserSettings(
-      restWarnSeconds:
-          inRange(SettingKeys.restWarnSeconds, 0, maxRestWarnSeconds, 5),
+      restWarnSeconds: inRange(SettingKeys.restWarnSeconds, minRestWarnSeconds,
+          maxRestWarnSeconds, 5),
+      // Before the style existed, 0 seconds meant "off".
+      countdownStyle:
+          CountdownStyle.values.asNameMap()[map[SettingKeys.countdownStyle]] ??
+              (map[SettingKeys.restWarnSeconds] == '0'
+                  ? CountdownStyle.off
+                  : CountdownStyle.seconds),
       restBetweenExercises:
           between == null || between < 0 || between > maxDefaultRestSeconds
               ? 0

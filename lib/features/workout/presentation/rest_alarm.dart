@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/feedback/feedback_service.dart';
 import '../../settings/presentation/settings_providers.dart';
+import '../domain/rest_countdown.dart';
 import 'rest_timer_state.dart';
 
 /// Makes the rest-over beep work with the screen off.
@@ -38,12 +39,18 @@ class RestAlarmController with WidgetsBindingObserver {
   void _schedule(RestTimerState timer) {
     final settings = _ref.read(userSettingsProvider);
     _armed = true;
-    final warn = settings.restWarnSeconds;
-    final warnAt = warn > 0 ? timer.endsAt.subtract(Duration(seconds: warn)) : null;
+    final now = DateTime.now();
+    final tickAts = [
+      for (final before in countdownTicks(
+        style: settings.countdownStyle,
+        seconds: settings.restWarnSeconds,
+        totalSeconds: timer.totalSeconds,
+      ))
+        timer.endsAt.subtract(before),
+    ].where((t) => t.isAfter(now)).toList();
     _feedback.scheduleRestEnd(
       endsAt: timer.endsAt,
-      warnSeconds: warn,
-      warnAt: warnAt != null && warnAt.isAfter(DateTime.now()) ? warnAt : null,
+      tickAts: tickAts,
       sound: settings.sound,
       vibration: settings.vibration,
       title: 'Rest is over',
