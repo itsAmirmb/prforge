@@ -54,6 +54,9 @@ class SettingsRepository {
   Future<void> setShowSetClock(bool on) =>
       _put(SettingKeys.showSetClock, on.toString());
 
+  Future<void> setShowEstimate(bool on) =>
+      _put(SettingKeys.showEstimate, on.toString());
+
   Future<void> setPlateauHint(bool on) =>
       _put(SettingKeys.plateauHint, on.toString());
 

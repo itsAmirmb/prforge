@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../../app/theme.dart';
 import '../../../core/widgets/state_views.dart';
+import '../../workout/presentation/estimate_labels.dart';
 import '../../workout/presentation/workout_providers.dart';
 import '../../workout/presentation/workout_session_screen.dart';
 import '../data/prescription_repository.dart';
@@ -125,10 +126,20 @@ class WorkoutDayScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                     AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
-                child: FilledButton.icon(
-                  icon: const Icon(Icons.play_arrow),
-                  label: const Text('Start workout'),
-                  onPressed: () => _start(context, ref),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DayEstimateLabel(dayId: day.id),
+                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text('Start workout'),
+                        onPressed: () => _start(context, ref),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

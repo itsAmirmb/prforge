@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/widgets/state_views.dart';
 import '../domain/session_blocks.dart';
+import 'estimate_labels.dart';
 import 'exercise_block_card.dart';
 import 'exercise_picker_sheet.dart';
 import 'keep_screen_on.dart';
@@ -107,7 +108,14 @@ class WorkoutSessionScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Workout · $done/${sets.length} sets'),
-            WorkoutClockChip(sessionId: sessionId),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                WorkoutClockChip(sessionId: sessionId),
+                const SizedBox(width: 8),
+                RemainingEstimateChip(sessionId: sessionId),
+              ],
+            ),
           ],
         ),
         bottom: PreferredSize(

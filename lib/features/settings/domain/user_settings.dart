@@ -18,6 +18,7 @@ abstract final class SettingKeys {
   static const showWorkoutClock = 'showWorkoutClock';
   static const showExerciseClock = 'showExerciseClock';
   static const showSetClock = 'showSetClock';
+  static const showEstimate = 'showEstimate';
   static const plateauHint = 'plateauHint';
   static const speakReps = 'speakReps';
   static const speakWeight = 'speakWeight';
@@ -51,6 +52,7 @@ class UserSettings {
     this.showWorkoutClock = true,
     this.showExerciseClock = true,
     this.showSetClock = true,
+    this.showEstimate = true,
     this.plateauHint = true,
     this.speakReps = true,
     this.speakWeight = false,
@@ -87,6 +89,9 @@ class UserSettings {
   final bool showWorkoutClock;
   final bool showExerciseClock;
   final bool showSetClock;
+
+  /// Estimated workout time before starting and time left during it.
+  final bool showEstimate;
 
   /// "Same weight for N weeks" note under an exercise, shown once the top
   /// weight was unchanged for at least [plateauWeeks] weeks and
@@ -141,6 +146,7 @@ class UserSettings {
       showWorkoutClock: flag(SettingKeys.showWorkoutClock, true),
       showExerciseClock: flag(SettingKeys.showExerciseClock, true),
       showSetClock: flag(SettingKeys.showSetClock, true),
+      showEstimate: flag(SettingKeys.showEstimate, true),
       plateauHint: flag(SettingKeys.plateauHint, true),
       speakReps: flag(SettingKeys.speakReps, true),
       speakWeight: flag(SettingKeys.speakWeight, false),

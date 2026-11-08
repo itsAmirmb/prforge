@@ -330,6 +330,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 value: settings.showSetClock,
                 onChanged: ref.read(settingsRepositoryProvider).setShowSetClock,
               ),
+              SwitchListTile(
+                secondary: const Icon(Icons.schedule),
+                title: const Text('Estimated time'),
+                subtitle: const Text(
+                    'Before starting a workout, and the time left during it'),
+                value: settings.showEstimate,
+                onChanged: ref.read(settingsRepositoryProvider).setShowEstimate,
+              ),
           ]),
           _Section('Progress', [
               SwitchListTile(
